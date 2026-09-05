@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unbiased NEWS - Advanced Interactive Prototype (Final Polish)</title>
+<style>
+  :root {
+    /* Base UI Colors */
+    --brand-orange: #f26122; 
+    --brand-dark: #1a1a1a;   
+    --brand-black: #1a1a1a;
+    --brand-white: #ffffff;
+    --surface: #ffffff;
+    --text-main: #1a1a1a;
+    --text-muted: #6b7280;
+    --border: #e5e7eb;
+    --radius: 12px;
+
+    /* Political Bias Standard Colors */
+    --left-color: #3b82f6;
+    --center-color: #9ca3af;
+    --right-color: #ef4444;
+    
+    /* Factuality Colors */
+    --high-fact: #10b981;
+    --mixed-fact: #f59e0b;
+    --low-fact: #ef4444;
+
+    /* Ownership Type Colors */
+    --own-conglom-color: #6366f1;
+    --own-public-color: #06b6d4;
+    --own-private-color: #10b981;
+  }
+  
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: #e5e5e5; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    color: var(--text-main);
+  }
+  
+  /* Single Phone Casing */
+  .device-frame {
+    width: 375px;
+    height: 700px;
+    background-color: var(--surface);
+    border-radius: 30px;
+    border: 8px solid var(--brand-dark);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Screens inside the device */
+  .screen {
+    width: 100%;
+    height: 100%;
+    display: none;
+    flex-direction: column;
+    background-color: var(--surface);
+  }
+  .screen.active {
+    display: flex;
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .content-area {
+    padding: 24px;
+    flex-grow: 1;
+    overflow-y: auto;
+    padding-bottom: 80px; 
+  }
+  .content-area::-webkit-scrollbar { display: none; }
+
+  /* Typography & Core UI */
+  h1 { font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem; color: var(--brand-dark); }
+  h2 { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; line-height: 1.3; }
+  p { color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; }
+  
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    cursor: pointer;
+  }
+  .card-category { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--brand-orange); }
+
+  .btn {
+    display: block; width: 100%; padding: 14px; border-radius: 8px; text-align: center;
+    font-weight: 700; cursor: pointer; box-sizing: border-box;
+  }
+  .btn-primary { background: var(--brand-orange); color: white; border: none; }
+  .btn-outline { background: transparent; color: var(--brand-dark); border: 2px solid var(--brand-dark); }
+  
+  .tags { display: flex; gap: 8px; margin-bottom: 12px; }
+  .tag { padding: 4px 10px; border-radius: 99px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+  .tag.center { background: #f3f4f6; color: var(--brand-dark); }
+  .tag.topic { background: rgba(242, 97, 34, 0.1); color: var(--brand-orange); }
+  
+  .input-group { margin-bottom: 16px; }
+  .input-group label { display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px; }
+  .input-control { width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
+  
+  .top-header { display: flex; flex-direction: column; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+  .top-header-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+  .header-logo-title { display: flex; align-items: center; gap: 10px; }
+  
+  .bottom-nav {
+    position: absolute; bottom: 0; width: 100%; background: var(--surface);
+    border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 15px 0; z-index: 50;
+  }
+  .nav-item { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); cursor: pointer; padding-bottom: 4px; }
+  .nav-item.active { color: var(--brand-dark); border-bottom: 2px solid var(--brand-dark); }
+
+  /* Mobile Category Nav with Arrows */
+  .category-wrapper { display: flex; align-items: center; width: 100%; position: relative; gap: 4px; }
+  .scroll-btn { background: transparent; border: none; color: var(--brand-orange); font-size: 1rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0 4px; z-index: 2; }
+  .category-nav-mobile { display: flex; gap: 8px; overflow-x: auto; flex-grow: 1; padding-bottom: 4px; scrollbar-width: none; scroll-behavior: smooth; }
+  .category-nav-mobile::-webkit-scrollbar { display: none; }
+  .category-btn { background: #f3f4f6; color: var(--text-muted); padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; cursor: pointer; white-space: nowrap; border: none; }
+  .category-btn.active { background: var(--brand-dark); color: white; }
+
+  /* Search Box Styling */
+  .search-header { padding: 24px 24px 10px; background: #fff; z-index: 10; border-bottom: 1px solid var(--border); }
+  .search-box { position: relative; width: 100%; }
+  .search-box input {
+      width: 100%; background-color: #f3f4f6; border: 1px solid var(--border); border-radius: 20px;
+      padding: 10px 16px 10px 36px; color: var(--text-main); font-size: 0.95rem; outline: none; box-sizing: border-box;
+      transition: all 0.2s;
+  }
+  .search-box input:focus { border-color: var(--brand-orange); background-color: var(--brand-white); box-shadow: 0 0 0 3px rgba(242, 97, 34, 0.1); }
+  .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 1rem; }
+
+  /* --- Advanced Analytics Graphics --- */
+  .bias-bar-wrap { margin-bottom: 0.75rem; }
+  .bias-bar { height: 8px; width: 100%; background: #e5e7eb; border-radius: 4px; display: flex; overflow: hidden; margin-bottom: 0.4rem; }
+  .seg-left { background-color: var(--left-color); }
+  .seg-center { background-color: var(--center-color); }
+  .seg-right { background-color: var(--right-color); }
+  .bias-legend { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); font-weight: 700; }
+
+  .sidebar-section { padding-bottom: 1.25rem; border-bottom: 1px solid #f0f2f5; margin-bottom: 1.25rem; }
+  .sidebar-heading { font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.75rem; font-weight: 800; }
+  
+  .bias-grid-7-wrapper { overflow-x: auto; padding-bottom: 0.5rem; scrollbar-width: none; }
+  .bias-grid-7-wrapper::-webkit-scrollbar { display: none; }
+  .bias-grid-7 { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.25rem; min-width: 320px; }
+  .bias-col-7 { display: flex; flex-direction: column; align-items: center; background: #f3f4f6; border-radius: 4px; padding-top: 0.4rem; }
+  .bias-header-7 { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; text-align: center; margin-bottom: 0.5rem; width: 100%; padding-top: 0.2rem; }
+  
+  .color-ext-left { color: #1e3a8a; border-top: 3px solid #1e3a8a; }
+  .color-far-left { color: #2563eb; border-top: 3px solid #2563eb; }
+  .color-lean-left { color: #60a5fa; border-top: 3px solid #60a5fa; }
+  .color-center { color: #9ca3af; border-top: 3px solid #9ca3af; }
+  .color-lean-right { color: #f87171; border-top: 3px solid #f87171; }
+  .color-far-right { color: #dc2626; border-top: 3px solid #dc2626; }
+  .color-ext-right { color: #7f1d1d; border-top: 3px solid #7f1d1d; }
+
+  .outlet-logo-link { display: block; width: 24px; height: 24px; border-radius: 50%; border: 1px solid #e5e7eb; background-color: var(--brand-white); overflow: hidden; margin-bottom: 0.4rem; }
+  .outlet-logo-link img { width: 100%; height: 100%; object-fit: contain; }
+
+  .fact-score-container { display: flex; align-items: center; gap: 1rem; background: #f9fafb; border: 1px solid var(--border); padding: 0.75rem 1rem; border-radius: 8px; }
+  .fact-score-circle { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 50px; height: 50px; border-radius: 50%; background: var(--brand-white); border: 3px solid var(--high-fact); flex-shrink: 0; }
+  .fact-circle-High { border-color: var(--high-fact); }
+  .fact-circle-Mixed { border-color: var(--mixed-fact); }
+  .fact-circle-Low { border-color: var(--low-fact); }
+  .fact-score-number { font-size: 1rem; font-weight: 800; color: var(--brand-black); }
+  .fact-badge { font-weight: 800; }
+  .fact-High { color: var(--high-fact); }
+  .fact-Mixed { color: var(--mixed-fact); }
+
+  .ownership-bar { height: 10px; width: 100%; background: #e5e7eb; border-radius: 4px; display: flex; overflow: hidden; margin-bottom: 0.4rem; }
+  .own-seg { height: 100%; }
+  .own-conglom { background-color: var(--own-conglom-color); }
+  .own-public { background-color: var(--own-public-color); }
+  .own-private { background-color: var(--own-private-color); }
+  .ownership-legend { display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--text-muted); font-weight: 700; margin-bottom: 0.75rem; }
+  
+  .ownership-list { display: flex; flex-direction: column; gap: 0.4rem; }
+  .ownership-item { display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; background: #f9fafb; border: 1px solid var(--border); padding: 0.35rem 0.6rem; border-radius: 4px; }
+  .ownership-outlet-name { display: flex; align-items: center; gap: 0.4rem; font-weight: 700; color: var(--brand-black); }
+  .ownership-small-logo { width: 14px; height: 14px; border-radius: 50%; }
+  .ownership-entity { color: var(--text-muted); font-weight: 500; text-align: right; }
+
+  .article-body p { margin-bottom: 12px; color: var(--text-muted); line-height: 1.6; }
+</style>
+</head>
+<body>
+
+  <div class="device-frame">
+    
+    <!-- Screen 1: Home/Onboarding -->
+    <div class="screen active" id="screen-home">
+      <div class="content-area" style="display: flex; flex-direction: column; justify-content: center; height: 100%; text-align: center;">
+        <img src="logo.png" alt="Unbiased NEWS Logo" style="width: 120px; height: 120px; margin: 0 auto 15px; display: block;">
+        
+        <!-- Updated Title and Slogans -->
+        <h1 style="font-size: 2.2rem; line-height: 1.1; margin-bottom: 10px;">Unbiased<br><span style="color: var(--brand-orange);">NEWS</span></h1>
+        <h2 style="font-size: 1.05rem; font-weight: 800; color: var(--brand-dark); margin-bottom: 15px;">Read real NEWS not a narrative</h2>
+        <p style="margin-bottom: 40px; font-weight: 500; font-style: italic; color: var(--text-muted);">"Skip the fluff. Beat the algorithm.<br>The smart digests for busy people."</p>
+        
+        <div style="margin-top: auto;">
+          <div class="btn btn-primary" id="btn-start-trial" style="margin-bottom: 12px;">Start Free Trial</div>
+          <div class="btn btn-outline" id="btn-login">Log In</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen 2: Core Feature (Feed) -->
+    <div class="screen" id="screen-feed">
+      <div class="content-area">
+        
+        <div class="top-header">
+          <div class="top-header-row">
+            <div class="header-logo-title">
+              <img src="logo.png" alt="Logo" style="width: 32px; height: 32px;">
+              <h1 style="margin: 0; font-size: 1.2rem;">Your Briefing</h1>
+            </div>
+            <div id="btn-logout" style="font-size: 0.85rem; font-weight: 700; color: var(--brand-orange); cursor: pointer; text-decoration: underline;">Logout</div>
+          </div>
+          
+          <div class="category-wrapper">
+            <button class="scroll-btn" onclick="scrollNav('left')">&#10094;</button>
+            <div class="category-nav-mobile" id="categoryNav">
+              <button class="category-btn active" onclick="filterCategory('all', this)">All</button>
+              <button class="category-btn" onclick="filterCategory('politics', this)">Politics</button>
+              <button class="category-btn" onclick="filterCategory('conflict', this)">Conflict</button>
+              <button class="category-btn" onclick="filterCategory('economy', this)">Economy</button>
+              <button class="category-btn" onclick="filterCategory('immigration', this)">Immigration</button>
+              <button class="category-btn" onclick="filterCategory('science', this)">Science</button>
+            </div>
+            <button class="scroll-btn" onclick="scrollNav('right')">&#10095;</button>
+          </div>
+        </div>
+        
+        <div id="feed-container"></div>
+
+      </div>
+      <div class="bottom-nav">
+        <span class="nav-item active">Feed</span>
+        <span class="nav-item" id="nav-btn-search-1">Search</span>
+        <span class="nav-item">Saved</span>
+        <span class="nav-item" id="nav-btn-profile-1">Profile</span>
+      </div>
+    </div>
+
+    <!-- Screen: Search Engine -->
+    <div class="screen" id="screen-search">
+      <div class="search-header">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <div class="header-logo-title">
+                <img src="logo.png" alt="Logo" style="width: 24px; height: 24px;">
+                <h1 style="margin: 0; font-size: 1.2rem;">Explore</h1>
+            </div>
+        </div>
+        <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchInput" placeholder="Search topics, tags, or bias...">
+        </div>
+      </div>
+      
+      <div class="content-area" style="padding-top: 15px;">
+        <p id="search-results-count" style="font-size: 0.85rem; font-weight: 700; margin-bottom: 15px; color: var(--text-muted);">Type to search fulltext and bias tags...</p>
+        <div id="search-container"></div>
+      </div>
+
+      <div class="bottom-nav">
+        <span class="nav-item" id="nav-btn-feed-3">Feed</span>
+        <span class="nav-item active">Search</span>
+        <span class="nav-item">Saved</span>
+        <span class="nav-item" id="nav-btn-profile-3">Profile</span>
+      </div>
+    </div>
+
+    <!-- Screen: Article Detail -->
+    <div class="screen" id="screen-article-detail">
+      <div class="top-header" style="padding: 15px 24px 10px; margin: 0; border-bottom: none; background: #fff; z-index: 10; flex-direction: row; justify-content: space-between;">
+        <div id="btn-back-feed" style="font-size: 0.85rem; font-weight: 700; color: var(--brand-orange); cursor: pointer;">← Back to Feed</div>
+        <img src="logo.png" alt="Logo" style="width: 32px; height: 32px;">
+      </div>
+      
+      <div class="content-area" style="padding: 0 24px 80px 24px;">
+        <div style="margin-bottom: 15px;">
+            <span id="detailCategory" class="card-category">CATEGORY</span>
+            <h2 id="detailHeadline" style="font-size: 1.35rem; font-weight: 800; line-height: 1.3; margin-top: 0.4rem; color: var(--brand-black);">Headline Here</h2>
+        </div>
+        <div style="font-size: 0.95rem; line-height: 1.6; color: var(--brand-dark); margin-bottom: 24px;">
+            <div id="detailContent" class="article-body"></div>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-heading">Media Bias Distribution</div>
+            <div class="bias-bar-wrap">
+                <div class="bias-bar" id="detailBiasBar"></div>
+                <div class="bias-legend">
+                    <span>Left <span id="detailPctLeft">0%</span></span>
+                    <span>Center <span id="detailPctCenter">0%</span></span>
+                    <span>Right <span id="detailPctRight">0%</span></span>
+                </div>
+            </div>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-heading" id="detailOutletsTitle">Covering Sources Breakdown</div>
+            <div class="bias-grid-7-wrapper">
+                <div class="bias-grid-7">
+                    <div class="bias-col-7"><div class="bias-header-7 color-ext-left">Ext<br>L</div><div id="col-ext-left"></div></div>
+                    <div class="bias-col-7"><div class="bias-header-7 color-far-left">Far<br>L</div><div id="col-far-left"></div></div>
+                    <div class="bias-col-7"><div class="bias-header-7 color-lean-left">Lean<br>L</div><div id="col-lean-left"></div></div>
+                    <div class="bias-col-7"><div class="bias-header-7 color-center">Centr</div><div id="col-center"></div></div>
+                    <div class="bias-col-7"><div class="bias-header-7 color-lean-right">Lean<br>R</div><div id="col-lean-right"></div></div>
+                    <div class="bias-col-7"><div class="bias-header-7 color-far-right">Far<br>R</div><div id="col-far-right"></div></div>
+                    <div class="bias-col-7"><div class="bias-header-7 color-ext-right">Ext<br>R</div><div id="col-ext-right"></div></div>
+                </div>
+            </div>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-heading">Factuality Score</div>
+            <div class="fact-score-container">
+                <div class="fact-score-circle" id="detailFactCircle">
+                    <span class="fact-score-number" id="detailFactScore">0</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <span id="detailFactuality" class="fact-badge" style="font-size: 0.9rem;">High</span>
+                    <span style="font-size: 0.7rem; color: var(--text-muted);">Verified against multi-source cross-checking.</span>
+                </div>
+            </div>
+        </div>
+        <div class="sidebar-section" style="border-bottom: none;">
+            <div class="sidebar-heading">Media Ownership Breakdown</div>
+            <div class="ownership-bar" id="detailOwnershipBar"></div>
+            <div class="ownership-legend" id="detailOwnershipLegend"></div>
+            <div class="ownership-list" id="detailOwnershipList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen 3: Action (Checkout) -->
+    <div class="screen" id="screen-checkout">
+      <div class="content-area">
+        <div class="top-header" style="flex-direction: row; justify-content: space-between;">
+          <div class="header-logo-title">
+            <img src="logo.png" alt="Logo" style="width: 32px; height: 32px;">
+            <h1 style="margin: 0; font-size: 1.2rem;">Upgrade</h1>
+          </div>
+          <div id="btn-back-home" style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted); cursor: pointer; text-decoration: underline;">Back</div>
+        </div>
+        <p style="margin-bottom: 24px; font-weight: 500;">Zero ads. Unlimited summaries.</p>
+        <div class="card" style="border: 2px solid var(--brand-orange); background: rgba(242, 97, 34, 0.05);">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 style="color: var(--brand-orange); margin: 0;">Student Plan</h2>
+            <h2 style="margin: 0; color: var(--brand-dark);">$2.99<span style="font-size: 0.8rem; font-weight:normal;">/mo</span></h2>
+          </div>
+        </div>
+        <form style="margin-top: 20px;" onsubmit="event.preventDefault();">
+          <div class="input-group">
+            <label>University Email</label>
+            <input type="email" class="input-control" placeholder="katrin.study@university.edu">
+          </div>
+          <div class="input-group">
+            <label>Card Details</label>
+            <input type="text" class="input-control" placeholder="0000 0000 0000 0000" style="margin-bottom: 8px;">
+            <div style="display: flex; gap: 10px;">
+              <input type="text" class="input-control" placeholder="MM/YY">
+              <input type="text" class="input-control" placeholder="CVC">
+            </div>
+          </div>
+          <button class="btn btn-primary" id="btn-pay" style="margin-top: 24px;">Pay $2.99</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Screen 4: Result (Confirmation) -->
+    <div class="screen" id="screen-result">
+      <div class="content-area" style="text-align: center; padding-top: 40px;">
+        <img src="logo.png" alt="Logo" style="width: 48px; height: 48px; margin: 0 auto 20px; display: block;">
+        <div style="width: 80px; height: 80px; background: var(--brand-orange); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; margin: 0 auto 20px;">✓</div>
+        <h1>You're All Set!</h1>
+        <p>Welcome to Premium, Katrin. You are now saving time and staying informed without the noise.</p>
+        <div class="btn btn-primary" id="btn-go-feed-from-success" style="margin-top: 40px;">Go to My Feed</div>
+      </div>
+    </div>
+
+    <!-- Screen 5: Profile Settings -->
+    <div class="screen" id="screen-profile">
+      <div class="content-area">
+        <div class="top-header" style="flex-direction: row; justify-content: space-between; border-bottom: none;">
+          <div class="header-logo-title">
+            <img src="logo.png" alt="Logo" style="width: 32px; height: 32px;">
+            <h1 style="margin: 0; font-size: 1.5rem;">Your Profile</h1>
+          </div>
+          <div id="btn-logout-profile" style="font-size: 0.85rem; font-weight: 700; color: var(--low-fact); cursor: pointer; text-decoration: underline;">Logout</div>
+        </div>
+
+        <h2 style="font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 12px; margin-top: 10px;">Subscription Status</h2>
+        <div class="card" style="border: 2px solid var(--brand-orange); background: rgba(242, 97, 34, 0.05); margin-bottom: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h2 style="color: var(--brand-orange); margin: 0; font-size: 1.2rem;">Premium Tier</h2>
+            <div class="tag" style="background: var(--brand-orange); color: white; border-radius: 4px;">Active</div>
+          </div>
+          <p style="margin: 0; color: var(--brand-dark); font-weight: 700;">$2.99 / month</p>
+        </div>
+
+        <h2 style="font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 12px;">Personal Info</h2>
+        <form onsubmit="event.preventDefault(); alert('Profile Updated Successfully!');">
+          <div class="input-group">
+            <label>Full Name</label>
+            <input type="text" class="input-control" value="Katrin">
+          </div>
+          <div class="input-group">
+            <label>Email Address</label>
+            <input type="email" class="input-control" value="katrin.study@university.edu">
+          </div>
+          <div class="input-group">
+            <label>Password</label>
+            <input type="password" class="input-control" value="password123">
+          </div>
+          <div class="input-group">
+            <label>Credit Card</label>
+            <input type="text" class="input-control" value="**** **** **** 4242">
+          </div>
+          <button class="btn btn-outline" style="margin-top: 20px;">Save Changes</button>
+        </form>
+      </div>
+      
+      <div class="bottom-nav">
+        <span class="nav-item" id="nav-btn-feed-2">Feed</span>
+        <span class="nav-item" id="nav-btn-search-2">Search</span>
+        <span class="nav-item">Saved</span>
+        <span class="nav-item active">Profile</span>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const articles = [
+        {
+            id: 12, title: 'Trump Demands Iran Pay War Reparations Amid Surging Regional Tensions',
+            category: 'politics', categoryLabel: 'Politics', summary: 'Following warnings over the Strait of Hormuz, Donald Trump has demanded that Tehran pay financial reparations for past military casualties before sanctions are lifted.',
+            factCheckScore: 68, factuality: 'Mixed', left: 55, center: 10, right: 35, outletsCount: 205, blindspot: 'Left Blindspot',
+            ownershipDistribution: { conglomerate: 65, private: 20, public: 15 },
+            outlets: {
+                extLeft: [{ name: 'Jacobin', domain: 'jacobin.com', owner: 'Jacobin Foundation (Non-Profit)' }],
+                farLeft: [{ name: 'MSNBC', domain: 'msnbc.com', owner: 'Comcast / NBCUniversal' }, { name: 'HuffPost', domain: 'huffpost.com', owner: 'BuzzFeed, Inc.' }],
+                leanLeft: [{ name: 'CNN', domain: 'cnn.com', owner: 'Warner Bros. Discovery' }, { name: 'The Guardian', domain: 'theguardian.com', owner: 'Scott Trust Limited' }, { name: 'Politico', domain: 'politico.com', owner: 'Axel Springer SE' }],
+                center: [{ name: 'Reuters', domain: 'reuters.com', owner: 'Thomson Reuters Corp.' }, { name: 'BBC News', domain: 'bbc.com', owner: 'British Public Media (Charter)' }],
+                leanRight: [{ name: 'Wall Street Journal', domain: 'wsj.com', owner: 'News Corp (Murdoch Family)' }],
+                farRight: [{ name: 'Fox News', domain: 'foxnews.com', owner: 'Fox Corporation (Murdoch Family)' }, { name: 'New York Post', domain: 'nypost.com', owner: 'News Corp (Murdoch Family)' }],
+                extRight: [{ name: 'Washington Times', domain: 'washingtontimes.com', owner: 'Operations Holdings (Unification Church)' }, { name: 'Breitbart', domain: 'breitbart.com', owner: 'Mercer Family / Private Investors' }]
+            },
+            content: `<p><strong>August 16, 2026</strong> - Following warnings over the Strait of Hormuz, Donald Trump has demanded that Tehran pay financial reparations for past military casualties before sanctions are lifted.</p>`
+        },
+        {
+            id: 1, title: 'NASA Highlights Partial Lunar Eclipse for August 2026',
+            category: 'science', categoryLabel: 'Science & Environment', summary: 'NASA issues observational guidance for the upcoming partial lunar eclipse visible across the Americas, Europe, and Africa.',
+            factCheckScore: 95, factuality: 'High', left: 30, center: 45, right: 25, outletsCount: 84,
+            ownershipDistribution: { conglomerate: 45, private: 35, public: 20 },
+            outlets: {
+                extLeft: [], farLeft: [{ name: 'Slate', domain: 'slate.com', owner: 'The Slate Group' }],
+                leanLeft: [{ name: 'The Verge', domain: 'theverge.com', owner: 'Vox Media' }, { name: 'Scientific American', domain: 'scientificamerican.com', owner: 'Springer Nature' }],
+                center: [{ name: 'Reuters', domain: 'reuters.com', owner: 'Thomson Reuters Corp.' }, { name: 'Space.com', domain: 'space.com', owner: 'Future plc' }],
+                leanRight: [], farRight: [{ name: 'Fox Weather', domain: 'foxweather.com', owner: 'Fox Corporation' }], extRight: [{ name: 'Daily Wire', domain: 'dailywire.com', owner: 'Bentkey Ventures' }]
+            },
+            content: `<p><strong>August 16, 2026</strong> - Skywatchers have another celestial event to look forward to this month. A partial lunar eclipse will take place on August 27-28, 2026, according to NASA. The event occurs when the Moon passes partially through Earth's shadow.</p><p>NASA lists the eclipse as visible across the Americas, Europe, and Africa. Unlike a solar eclipse, you can safely watch a lunar eclipse with your naked eyes. The greatest eclipse will peak at 4:14 a.m. UTC on August 28.</p>`
+        },
+        {
+            id: 2, title: 'US Central Command Deploys USS George H.W. Bush in Arabian Sea',
+            category: 'conflict', categoryLabel: 'Conflict & Defense', summary: 'US Central Command releases operational photos of flight deck sorties in the Arabian Sea amid naval security operations.',
+            factCheckScore: 91, factuality: 'High', left: 22, center: 38, right: 40, outletsCount: 112, blindspot: 'Right Lean Heavy',
+            ownershipDistribution: { conglomerate: 55, private: 30, public: 15 },
+            outlets: {
+                extLeft: [{ name: 'The Intercept', domain: 'theintercept.com', owner: 'First Look Media (Non-Profit)' }], farLeft: [],
+                leanLeft: [{ name: 'Washington Post', domain: 'washingtonpost.com', owner: 'Nash Holdings (Jeff Bezos)' }],
+                center: [{ name: 'Defense News', domain: 'defensenews.com', owner: 'Sightline Media Group (Regent)' }, { name: 'Associated Press', domain: 'apnews.com', owner: 'The AP News Cooperative' }],
+                leanRight: [{ name: 'Washington Examiner', domain: 'washingtonexaminer.com', owner: 'Clarity Media Group (Philip Anschutz)' }],
+                farRight: [{ name: 'Fox News', domain: 'foxnews.com', owner: 'Fox Corporation (Murdoch Family)' }, { name: 'National Review', domain: 'nationalreview.com', owner: 'National Review Institute' }], extRight: []
+            },
+            content: `<p><strong>August 16, 2026</strong> - The US Central Command posted images showing fighter jets taking off from the USS George H.W. Bush flight deck in the Arabian Sea. The deployment is part of a routine carrier rotation meant to support security in the Middle East.</p><p>The nuclear-powered aircraft carrier's presence comes amid heightened regional tensions and ongoing naval operations to secure international shipping lanes.</p>`
+        },
+        {
+            id: 3, title: 'Morocco Foils Mass Irregular Migration Attempt Toward Ceuta Enclave',
+            category: 'immigration', categoryLabel: 'Immigration', summary: 'Moroccan authorities intercept over 300 individuals attempting to cross into the Spanish northern territory of Ceuta.',
+            factCheckScore: 72, factuality: 'Mixed', left: 45, center: 30, right: 25, outletsCount: 67,
+            ownershipDistribution: { conglomerate: 40, private: 25, public: 35 },
+            outlets: {
+                extLeft: [], farLeft: [{ name: 'Le Monde', domain: 'lemonde.fr', owner: 'Le Monde SA (Independent Trust)' }],
+                leanLeft: [{ name: 'El País', domain: 'elpais.com', owner: 'PRISA Group' }, { name: 'The Guardian', domain: 'theguardian.com', owner: 'Scott Trust Limited' }],
+                center: [{ name: 'AFP', domain: 'afp.com', owner: 'Agence France-Presse (Public Trust)' }, { name: 'EFE Agency', domain: 'efe.com', owner: 'SEPI (Spanish State Holding)' }, { name: 'EuroNews', domain: 'euronews.com', owner: 'Alpac Capital / European Broadcasters' }],
+                leanRight: [], farRight: [{ name: 'ABC Spain', domain: 'abc.es', owner: 'Vocento Group' }, { name: 'The Telegraph', domain: 'telegraph.co.uk', owner: 'RedBird IMI / Telegraph Media Group' }], extRight: []
+            },
+            content: `<p><strong>August 16, 2026</strong> - Moroccan authorities thwarted a mass attempt by irregular migrants to cross from the northern city of Fnideq into the Spanish enclave of Ceuta on Saturday.</p><p>Around 300 individuals, primarily from sub-Saharan African countries, gathered in the mountainous terrain. Heavy security deployments prevented border breaches, and the border crossing operations remain normal.</p>`
+        },
+        {
+            id: 4, title: 'Czechia Extends Temporary Protection for Ukrainian Refugees to 2028',
+            category: 'immigration', categoryLabel: 'Immigration & Politics', summary: 'The Czech Ministry of the Interior confirms temporary protection extension through March 2028 alongside new registration protocols for military-age males.',
+            factCheckScore: 94, factuality: 'High', left: 35, center: 50, right: 15, outletsCount: 53,
+            ownershipDistribution: { conglomerate: 30, private: 20, public: 50 },
+            outlets: {
+                extLeft: [], farLeft: [],
+                leanLeft: [{ name: 'Deník N', domain: 'denikn.cz', owner: 'N Media a.s. (Independent Publishers)' }, { name: 'Balkan Insight', domain: 'balkaninsight.com', owner: 'BIRN (Non-Profit NGO)' }],
+                center: [{ name: 'ČTK', domain: 'ctk.cz', owner: 'Czech News Agency (Public Body)' }, { name: 'Radio Prague International', domain: 'english.radio.cz', owner: 'Czech Radio (Public Media)' }, { name: 'DW News', domain: 'dw.com', owner: 'Deutsche Welle (German Public Body)' }],
+                leanRight: [], farRight: [{ name: 'Echo24', domain: 'echo24.cz', owner: 'Echo Media a.s. (Marek Španěl)' }], extRight: []
+            },
+            content: `<p><strong>August 5, 2026</strong> - The Czech Ministry of the Interior confirmed that temporary protection for people displaced from Ukraine will be extended until March 31, 2028.</p><p>However, new conditions apply to male applicants aged 18 to 60 subject to compulsory military service. They must now register in the Reserv+ app and provide evidence of fulfilling their military obligations when submitting new applications.</p>`
+        },
+        {
+            id: 5, title: 'Iran Detains Two French Diplomats Over Alleged Foreign Interference',
+            category: 'politics', categoryLabel: 'Politics & Diplomacy', summary: 'Iranian intelligence briefly detains two accredited French diplomats during high-security arrests in Tehran before releasing them to the French embassy.',
+            factCheckScore: 71, factuality: 'Mixed', left: 40, center: 20, right: 40, outletsCount: 91,
+            ownershipDistribution: { conglomerate: 45, private: 25, public: 30 },
+            outlets: {
+                extLeft: [], farLeft: [{ name: 'Liberation', domain: 'liberation.fr', owner: 'Fondation pour une presse libre (Altice)' }],
+                leanLeft: [{ name: 'France 24', domain: 'france24.com', owner: 'France Médias Monde (French State)' }],
+                center: [{ name: 'AFP', domain: 'afp.com', owner: 'Agence France-Presse (Public Trust)' }, { name: 'Reuters', domain: 'reuters.com', owner: 'Thomson Reuters Corp.' }],
+                leanRight: [], farRight: [{ name: 'Jerusalem Post', domain: 'jpost.com', owner: 'The Jerusalem Post Group (Eli Azur)' }, { name: 'The Sun', domain: 'thesun.co.uk', owner: 'News Corp UK (Murdoch Family)' }], extRight: []
+            },
+            content: `<p><strong>August 16, 2026</strong> - Iran's Intelligence Ministry stated that two French diplomats were briefly detained during a national security investigation.</p><p>The intelligence units encountered the diplomats while executing judicial arrests for two suspects involved in foreign influence operations. Following identity verification, the diplomats were handed back to the French ambassador.</p>`
+        },
+        {
+            id: 6, title: 'Zawiya Power Plant Explosion Knocks Out Electricity in Western Libya',
+            category: 'conflict', categoryLabel: 'Conflict & Energy', summary: 'An explosion near Libya’s western Zawiya electrical facility triggers automatic grid shutdowns and widespread regional power outages.',
+            factCheckScore: 89, factuality: 'High', left: 20, center: 65, right: 15, outletsCount: 29,
+            ownershipDistribution: { conglomerate: 50, private: 30, public: 20 },
+            outlets: {
+                extLeft: [], farLeft: [],
+                leanLeft: [{ name: 'Middle East Eye', domain: 'middleeasteye.net', owner: 'M.E.E Ltd (Independent Private)' }],
+                center: [{ name: 'Libya Observer', domain: 'libyaobserver.ly', owner: 'Libya Observer Media Group' }, { name: 'Reuters', domain: 'reuters.com', owner: 'Thomson Reuters Corp.' }, { name: 'Bloomberg', domain: 'bloomberg.com', owner: 'Bloomberg LP (Michael Bloomberg)' }],
+                leanRight: [], farRight: [{ name: 'The National News', domain: 'thenationalnews.com', owner: 'International Media Investments (UAE)' }], extRight: []
+            },
+            content: `<p><strong>August 16, 2026</strong> - A major explosion occurred Saturday near the Zawiya power plant in western Libya, causing severe damage.</p><p>The state-owned General Electricity Company of Libya (GECOL) confirmed the blast knocked several electricity generation units out of service, causing widespread grid instability and blackouts in surrounding regions.</p>`
+        },
+        {
+            id: 7, title: 'South Korea Dismisses Top Trade Negotiator Amid US Tariff Pressures',
+            category: 'economy', categoryLabel: 'Economy & Trade', summary: 'Seoul relieves chief trade envoy Yeo Han-koo of duties following escalating negotiations over newly proposed US automotive and tech tariffs.',
+            factCheckScore: 92, factuality: 'High', left: 30, center: 40, right: 30, outletsCount: 76,
+            ownershipDistribution: { conglomerate: 60, private: 25, public: 15 },
+            outlets: {
+                extLeft: [], farLeft: [],
+                leanLeft: [{ name: 'Hankyoreh', domain: 'hani.co.kr', owner: 'Hankyoreh Media (Public Stockholding)' }, { name: 'Nikkei Asia', domain: 'asia.nikkei.com', owner: 'Nikkei Inc.' }],
+                center: [{ name: 'Yonhap News', domain: 'en.yna.co.kr', owner: 'Yonhap News Agency (Public Subvention)' }, { name: 'Financial Times', domain: 'ft.com', owner: 'Nikkei Inc.' }, { name: 'Bloomberg', domain: 'bloomberg.com', owner: 'Bloomberg LP' }],
+                leanRight: [], farRight: [{ name: 'Chosun Ilbo', domain: 'english.chosun.com', owner: 'Chosun Ilbo Company (Bang Family)' }, { name: 'Wall Street Journal', domain: 'wsj.com', owner: 'News Corp (Murdoch Family)' }], extRight: []
+            },
+            content: `<p><strong>August 16, 2026</strong> - South Korea has dismissed its chief trade negotiator, Yeo Han-koo, as Seoul faces mounting diplomatic pressure from the United States over sweeping tariffs.</p><p>According to Yonhap News, unresolved trade issues and investment commitments forced the structural change in Seoul's foreign commerce leadership.</p>`
+        },
+        {
+            id: 8, title: '7.7-Magnitude Earthquake Strikes Eastern Indonesia, 47 Killed',
+            category: 'science', categoryLabel: 'Natural Disasters', summary: 'Seismologists record a 7.7 undersea earthquake triggering localized tsunami warnings and structural damage across eastern islands.',
+            factCheckScore: 96, factuality: 'High', left: 25, center: 55, right: 20, outletsCount: 145,
+            ownershipDistribution: { conglomerate: 45, private: 25, public: 30 },
+            outlets: {
+                extLeft: [], farLeft: [],
+                leanLeft: [{ name: 'The Guardian', domain: 'theguardian.com', owner: 'Scott Trust Limited' }, { name: 'Sydney Morning Herald', domain: 'smh.com.au', owner: 'Nine Entertainment Co.' }],
+                center: [{ name: 'Antara News', domain: 'en.antaranews.com', owner: 'LKBN Antara (Indonesian State Media)' }, { name: 'BBC World', domain: 'bbc.com', owner: 'British Broadcasting Corporation (Charter)' }, { name: 'Reuters', domain: 'reuters.com', owner: 'Thomson Reuters Corp.' }],
+                leanRight: [], farRight: [{ name: 'Fox News', domain: 'foxnews.com', owner: 'Fox Corporation' }, { name: 'Sky News Australia', domain: 'skynews.com.au', owner: 'News Corp Australia' }], extRight: []
+            },
+            content: `<p><strong>August 16, 2026</strong> - At least 47 people have been reported killed and scores injured after a powerful 7.7-magnitude earthquake struck eastern Indonesia early Saturday morning.</p><p>The quake caused widespread destruction, damaging hundreds of residential homes and public facilities. Rescue operations are currently underway as aftershocks continue to hit the region.</p>`
+        },
+        {
+            id: 9, title: 'Sevilla Defeats Rayo Vallecano 2-1 in La Liga 2026-27 Opener',
+            category: 'economy', categoryLabel: 'Sports & Society', summary: 'Sevilla rallies with two second-half goals at home to claim opening three points in the 2026-27 Spanish football season.',
+            factCheckScore: 98, factuality: 'High', left: 10, center: 80, right: 10, outletsCount: 42,
+            ownershipDistribution: { conglomerate: 75, private: 15, public: 10 },
+            outlets: {
+                extLeft: [], farLeft: [],
+                leanLeft: [{ name: 'Marca', domain: 'marca.com', owner: 'Unidad Editorial (RCS MediaGroup)' }],
+                center: [{ name: 'ESPN', domain: 'espn.com', owner: 'The Walt Disney Company (80%) / Hearst (20%)' }, { name: 'BBC Sport', domain: 'bbc.com', owner: 'British Broadcasting Corporation' }, { name: 'The Athletic', domain: 'theathletic.com', owner: 'The New York Times Company' }],
+                leanRight: [], farRight: [{ name: 'AS Sports', domain: 'en.as.com', owner: 'PRISA Group' }], extRight: []
+            },
+            content: `<p><strong>August 16, 2026</strong> - Sevilla staged a dramatic comeback to defeat Rayo Vallecano 2-1 on Saturday, marking a thrilling start to their 2026-27 La Liga campaign.</p><p>Falling behind early, Sevilla rallied with two crucial second-half penalties at the Ramon Sanchez-Pizjuan stadium, securing their first three points of the season in front of a roaring home crowd.</p>`
+        },
+        {
+            id: 10, title: 'Severe Drought Covers Most of Czechia, Cyanobacteria Warnings Issued',
+            category: 'science', categoryLabel: 'Science & Environment', summary: 'Prolonged high temperatures cause critical drops in Czech reservoir levels and dangerous algae blooms prohibiting swimming in key recreational lakes.',
+            factCheckScore: 93, factuality: 'High', left: 45, center: 45, right: 10, outletsCount: 31,
+            ownershipDistribution: { conglomerate: 35, private: 25, public: 40 },
+            outlets: {
+                extLeft: [], farLeft: [],
+                leanLeft: [{ name: 'Aktuálně.cz', domain: 'aktualne.cz', owner: 'Economia a.s. (Zdeněk Bakala)' }, { name: 'Greenpeace Central Europe', domain: 'greenpeace.org', owner: 'Greenpeace International (Non-Profit NGO)' }],
+                center: [{ name: 'Česká televize', domain: 'ct24.ceskatelevize.cz', owner: 'Czech Television (Public Broadcaster)' }, { name: 'Prague Morning', domain: 'praguemorning.cz', owner: 'Prague Morning Media s.r.o.' }, { name: 'MeteoPress', domain: 'meteopress.cz', owner: 'Meteopress Weather Services' }],
+                leanRight: [], farRight: [{ name: 'Mladá fronta DNES', domain: 'idnes.cz', owner: 'KAPRAIN Group (Karel Pražák)' }], extRight: []
+            },
+            content: `<p><strong>August 16, 2026</strong> - Meteorologists warn that a severe and prolonged drought has now blanketed the vast majority of the Czech Republic.</p><p>The soaring temperatures and lack of rainfall have also led to dangerous cyanobacteria blooms in popular Czech lakes and reservoirs, prompting health officials to ban swimming in several key recreational areas.</p>`
+        },
+        {
+            id: 11, title: 'Czech Drug Control Institute Recalls Rowatinex Over Quality Defect',
+            category: 'science', categoryLabel: 'Health & Regulations', summary: 'SÚKL orders immediate pharmacy withdrawal of two Rowatinex capsule batches following failing peroxide degradation threshold tests.',
+            factCheckScore: 97, factuality: 'High', left: 15, center: 70, right: 15, outletsCount: 18,
+            ownershipDistribution: { conglomerate: 30, private: 20, public: 50 },
+            outlets: {
+                extLeft: [], farLeft: [{ name: 'Deník Referendum', domain: 'denikreferendum.cz', owner: 'Spolek Referendum (Non-Profit Association)' }],
+                leanLeft: [],
+                center: [{ name: 'SÚKL Official Press', domain: 'sukl.cz', owner: 'Czech Ministry of Health (State Body)' }, { name: 'ČTK Medical Desk', domain: 'ceskenoviny.cz', owner: 'Czech News Agency (Public Body)' }, { name: 'Zdravotnický deník', domain: 'zdravotnickydenik.cz', owner: 'Media Network s.r.o.' }],
+                leanRight: [], farRight: [{ name: 'Lidové noviny', domain: 'lidovky.cz', owner: 'KAPRAIN Group (Karel Pražák)' }], extRight: []
+            },
+            content: `<p><strong>August 16, 2026</strong> - SÚKL orders immediate pharmacy withdrawal of two Rowatinex capsule batches following failing peroxide degradation threshold tests.</p>`
+        }
+    ];
+
+    let currentCategory = 'all';
+
+    // Navigation Logic
+    function navigateTo(targetScreenId) {
+      document.querySelectorAll('.screen').forEach(screen => { screen.classList.remove('active'); });
+      document.getElementById(targetScreenId).classList.add('active');
+    }
+
+    // Scroll Logic for Category Nav
+    function scrollNav(direction) {
+        const nav = document.getElementById('categoryNav');
+        const scrollAmount = 150;
+        if (direction === 'left') {
+            nav.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+        } else {
+            nav.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+        }
+    }
+
+    // Category Filtering Logic
+    function filterCategory(cat, element) {
+        currentCategory = cat;
+        document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+        if (element) element.classList.add('active');
+        renderFeed();
+    }
+
+    // Full-Text Search Engine Logic
+    function performSearch(query) {
+        const container = document.getElementById('search-container');
+        const countLabel = document.getElementById('search-results-count');
+        container.innerHTML = '';
+        
+        if (!query.trim()) {
+            countLabel.innerText = "Type to search fulltext and bias tags...";
+            return;
+        }
+
+        const lowerQuery = query.toLowerCase().trim();
+        
+        const results = articles.filter(art => {
+            let customTags = [];
+            if(art.left > 40) customTags.push("left leaning");
+            if(art.right > 40) customTags.push("right leaning");
+            if(art.center > 40) customTags.push("center balanced");
+            if(art.factuality === "High") customTags.push("factual highly factual");
+            if(art.factuality === "Mixed") customTags.push("mixed factuality");
+            
+            const searchableText = `
+                ${art.title} 
+                ${art.summary} 
+                ${art.content} 
+                ${art.categoryLabel} 
+                ${art.factuality} 
+                ${art.blindspot || ''}
+                ${customTags.join(' ')}
+            `.toLowerCase();
+            
+            return searchableText.includes(lowerQuery);
+        });
+        
+        countLabel.innerText = `${results.length} result${results.length !== 1 ? 's' : ''} found`;
+
+        results.forEach(art => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.onclick = () => openArticle(art.id);
+            
+            let blindspotTag = art.blindspot ? `<span style="font-size: 0.65rem; font-weight: 800; padding: 0.2rem 0.5rem; border-radius: 12px; text-transform: uppercase; background: var(--brand-dark); color: white;">${art.blindspot}</span>` : '';
+            
+            card.innerHTML = `
+                <div class="card-top" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                    <div class="tags" style="margin-bottom: 0;"><span class="tag topic">${art.categoryLabel}</span></div>
+                    ${blindspotTag}
+                </div>
+                <h2 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 1rem; line-height: 1.3;">${art.title}</h2>
+                <div class="bias-bar-wrap" style="margin-bottom: 0.5rem;">
+                    <div class="bias-bar" style="height: 6px;">
+                        <div class="seg-left" style="width: ${art.left}%"></div>
+                        <div class="seg-center" style="width: ${art.center}%"></div>
+                        <div class="seg-right" style="width: ${art.right}%"></div>
+                    </div>
+                </div>
+                <div class="card-meta" style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--text-muted); padding-top: 0.5rem; border-top: 1px solid var(--border);">
+                    <span>Fact-Check: <span class="fact-badge fact-${art.factuality}">${art.factCheckScore}/100</span></span>
+                    <span>${art.outletsCount} Outlets</span>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    // Populate Feed Dynamically
+    function renderFeed() {
+        const feedContainer = document.getElementById('feed-container');
+        feedContainer.innerHTML = '';
+        
+        const filteredArticles = articles.filter(art => {
+            return (currentCategory === 'all' || art.category === currentCategory);
+        });
+        
+        filteredArticles.forEach(art => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.onclick = () => openArticle(art.id);
+            
+            let blindspotTag = art.blindspot ? `<span style="font-size: 0.65rem; font-weight: 800; padding: 0.2rem 0.5rem; border-radius: 12px; text-transform: uppercase; background: var(--brand-dark); color: white;">${art.blindspot}</span>` : '';
+            
+            card.innerHTML = `
+                <div class="card-top" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                    <div class="tags" style="margin-bottom: 0;"><span class="tag topic">${art.categoryLabel}</span></div>
+                    ${blindspotTag}
+                </div>
+                <h2 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 1rem; line-height: 1.3;">${art.title}</h2>
+                <div class="bias-bar-wrap" style="margin-bottom: 0.5rem;">
+                    <div class="bias-bar" style="height: 6px;">
+                        <div class="seg-left" style="width: ${art.left}%"></div>
+                        <div class="seg-center" style="width: ${art.center}%"></div>
+                        <div class="seg-right" style="width: ${art.right}%"></div>
+                    </div>
+                </div>
+                <div class="card-meta" style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--text-muted); padding-top: 0.5rem; border-top: 1px solid var(--border);">
+                    <span>Fact-Check: <span class="fact-badge fact-${art.factuality}">${art.factCheckScore}/100</span></span>
+                    <span>${art.outletsCount} Outlets</span>
+                </div>
+            `;
+            feedContainer.appendChild(card);
+        });
+    }
+
+    // Populate Article Detail Screen
+    function openArticle(id) {
+        const article = articles.find(a => a.id === id);
+        if (!article) return;
+
+        document.getElementById('detailHeadline').innerText = article.title;
+        document.getElementById('detailCategory').innerText = article.categoryLabel;
+        
+        document.getElementById('detailContent').innerHTML = article.content;
+
+        document.getElementById('detailBiasBar').innerHTML = `
+            <div class="seg-left" style="width: ${article.left}%"></div>
+            <div class="seg-center" style="width: ${article.center}%"></div>
+            <div class="seg-right" style="width: ${article.right}%"></div>
+        `;
+        document.getElementById('detailPctLeft').innerText = article.left + '%';
+        document.getElementById('detailPctCenter').innerText = article.center + '%';
+        document.getElementById('detailPctRight').innerText = article.right + '%';
+
+        const renderLogos = (containerId, array) => {
+            const el = document.getElementById(containerId);
+            if (!array || array.length === 0) { el.innerHTML = ''; return; }
+            el.innerHTML = array.map(o => `
+                <div class="outlet-logo-link"><img src="https://www.google.com/s2/favicons?domain=${o.domain}&sz=64" alt="${o.name}"></div>
+            `).join('');
+        };
+        renderLogos('col-ext-left', article.outlets.extLeft);
+        renderLogos('col-far-left', article.outlets.farLeft);
+        renderLogos('col-lean-left', article.outlets.leanLeft);
+        renderLogos('col-center', article.outlets.center);
+        renderLogos('col-lean-right', article.outlets.leanRight);
+        renderLogos('col-far-right', article.outlets.farRight);
+        renderLogos('col-ext-right', article.outlets.extRight);
+
+        document.getElementById('detailFactScore').innerText = article.factCheckScore;
+        const factBadge = document.getElementById('detailFactuality');
+        factBadge.innerText = article.factuality;
+        factBadge.className = `fact-badge fact-${article.factuality}`;
+        document.getElementById('detailFactCircle').className = `fact-score-circle fact-circle-${article.factuality}`;
+
+        const own = article.ownershipDistribution;
+        document.getElementById('detailOwnershipBar').innerHTML = `
+            <div class="own-seg own-conglom" style="width: ${own.conglomerate}%"></div>
+            <div class="own-seg own-public" style="width: ${own.public}%"></div>
+            <div class="own-seg own-private" style="width: ${own.private}%"></div>
+        `;
+        document.getElementById('detailOwnershipLegend').innerHTML = `
+            <span>Corporate (${own.conglomerate}%)</span>
+            <span>Public (${own.public}%)</span>
+            <span>Indie (${own.private}%)</span>
+        `;
+
+        const allOutlets = [
+            ...(article.outlets.extLeft || []), ...(article.outlets.farLeft || []), ...(article.outlets.leanLeft || []),
+            ...(article.outlets.center || []), ...(article.outlets.leanRight || []), ...(article.outlets.farRight || []), ...(article.outlets.extRight || [])
+        ];
+        
+        const topOutlets = allOutlets.slice(0, 4); 
+        document.getElementById('detailOwnershipList').innerHTML = topOutlets.map(o => `
+            <div class="ownership-item">
+                <span class="ownership-outlet-name">
+                    <img src="https://www.google.com/s2/favicons?domain=${o.domain}&sz=32" alt="${o.name}" class="ownership-small-logo">
+                    ${o.name}
+                </span>
+                <span class="ownership-entity">${o.owner || 'Independent'}</span>
+            </div>
+        `).join('');
+
+        navigateTo('screen-article-detail');
+    }
+
+    // Wiring up Search Field Input
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+        performSearch(e.target.value);
+    });
+
+    // Wiring up Home / Nav / Action Buttons
+    document.getElementById('btn-start-trial').addEventListener('click', () => navigateTo('screen-checkout'));
+    document.getElementById('btn-login').addEventListener('click', () => { renderFeed(); navigateTo('screen-feed'); });
+    document.getElementById('btn-back-home').addEventListener('click', () => navigateTo('screen-home'));
+    document.getElementById('btn-pay').addEventListener('click', () => navigateTo('screen-result'));
+    document.getElementById('btn-go-feed-from-success').addEventListener('click', () => { renderFeed(); navigateTo('screen-feed'); });
+    document.getElementById('btn-back-feed').addEventListener('click', () => navigateTo('screen-feed'));
+
+    // Wiring up Logout Buttons
+    document.getElementById('btn-logout').addEventListener('click', () => navigateTo('screen-home'));
+    document.getElementById('btn-logout-profile').addEventListener('click', () => navigateTo('screen-home'));
+
+    // Wiring up Nav Icons (Feed <-> Profile <-> Search)
+    document.getElementById('nav-btn-profile-1').addEventListener('click', () => navigateTo('screen-profile'));
+    document.getElementById('nav-btn-search-1').addEventListener('click', () => { navigateTo('screen-search'); document.getElementById('searchInput').focus(); });
+    
+    document.getElementById('nav-btn-feed-2').addEventListener('click', () => { renderFeed(); navigateTo('screen-feed'); });
+    document.getElementById('nav-btn-search-2').addEventListener('click', () => { navigateTo('screen-search'); document.getElementById('searchInput').focus(); });
+    
+    document.getElementById('nav-btn-feed-3').addEventListener('click', () => { renderFeed(); navigateTo('screen-feed'); });
+    document.getElementById('nav-btn-profile-3').addEventListener('click', () => navigateTo('screen-profile'));
+
+    // Initialize Feed on Load
+    renderFeed();
+  </script>
+</body>
+</html>
