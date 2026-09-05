@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Unbiased NEWS - Advanced Interactive Prototype (Final Polish)</title>
+<title>Unbiased NEWS - Advanced Interactive Prototype (Dates & Demarcation)</title>
 <style>
   :root {
     /* Base UI Colors */
@@ -86,6 +86,34 @@
   h2 { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; line-height: 1.3; }
   p { color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; }
   
+  /* Feed Demarcation Styling */
+  .feed-time-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 18px 0 12px 0;
+  }
+  .feed-time-divider:first-child {
+    margin-top: 4px;
+  }
+  .feed-time-divider::before, .feed-time-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .feed-time-label {
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--brand-orange);
+    background: rgba(242, 97, 34, 0.08);
+    border: 1px solid rgba(242, 97, 34, 0.2);
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+
   .card {
     background: var(--surface);
     border-radius: var(--radius);
@@ -94,6 +122,7 @@
     border: 1px solid var(--border);
     box-shadow: 0 2px 4px rgba(0,0,0,0.02);
     cursor: pointer;
+    position: relative;
   }
   .card-category { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--brand-orange); }
 
@@ -104,9 +133,24 @@
   .btn-primary { background: var(--brand-orange); color: white; border: none; }
   .btn-outline { background: transparent; color: var(--brand-dark); border: 2px solid var(--brand-dark); }
   
+  /* Bookmark Button Styling */
+  .bookmark-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    transition: transform 0.1s;
+    outline: none;
+  }
+  .bookmark-btn:active { transform: scale(0.9); }
+  
+  .empty-state { text-align: center; padding: 40px 10px; color: var(--text-muted); }
+
   .tags { display: flex; gap: 8px; margin-bottom: 12px; }
   .tag { padding: 4px 10px; border-radius: 99px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
-  .tag.center { background: #f3f4f6; color: var(--brand-dark); }
   .tag.topic { background: rgba(242, 97, 34, 0.1); color: var(--brand-orange); }
   
   .input-group { margin-bottom: 16px; }
@@ -206,7 +250,6 @@
       <div class="content-area" style="display: flex; flex-direction: column; justify-content: center; height: 100%; text-align: center;">
         <img src="logo.png" alt="Unbiased NEWS Logo" style="width: 120px; height: 120px; margin: 0 auto 15px; display: block;">
         
-        <!-- Updated Title and Slogans -->
         <h1 style="font-size: 2.2rem; line-height: 1.1; margin-bottom: 10px;">Unbiased<br><span style="color: var(--brand-orange);">NEWS</span></h1>
         <h2 style="font-size: 1.05rem; font-weight: 800; color: var(--brand-dark); margin-bottom: 15px;">Read real NEWS not a narrative</h2>
         <p style="margin-bottom: 40px; font-weight: 500; font-style: italic; color: var(--text-muted);">"Skip the fluff. Beat the algorithm.<br>The smart digests for busy people."</p>
@@ -249,14 +292,14 @@
 
       </div>
       <div class="bottom-nav">
-        <span class="nav-item active">Feed</span>
-        <span class="nav-item" id="nav-btn-search-1">Search</span>
-        <span class="nav-item">Saved</span>
-        <span class="nav-item" id="nav-btn-profile-1">Profile</span>
+        <span class="nav-item active nav-btn-feed">Feed</span>
+        <span class="nav-item nav-btn-search">Search</span>
+        <span class="nav-item nav-btn-saved">Saved</span>
+        <span class="nav-item nav-btn-profile">Profile</span>
       </div>
     </div>
 
-    <!-- Screen: Search Engine -->
+    <!-- Screen 3: Search Engine -->
     <div class="screen" id="screen-search">
       <div class="search-header">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
@@ -277,23 +320,52 @@
       </div>
 
       <div class="bottom-nav">
-        <span class="nav-item" id="nav-btn-feed-3">Feed</span>
-        <span class="nav-item active">Search</span>
-        <span class="nav-item">Saved</span>
-        <span class="nav-item" id="nav-btn-profile-3">Profile</span>
+        <span class="nav-item nav-btn-feed">Feed</span>
+        <span class="nav-item active nav-btn-search">Search</span>
+        <span class="nav-item nav-btn-saved">Saved</span>
+        <span class="nav-item nav-btn-profile">Profile</span>
       </div>
     </div>
 
-    <!-- Screen: Article Detail -->
+    <!-- Screen 4: Saved Articles -->
+    <div class="screen" id="screen-saved">
+        <div class="top-header" style="padding: 24px 24px 10px; margin: 0; background: #fff; z-index: 10; border-bottom: 1px solid var(--border);">
+            <div class="header-logo-title">
+                <img src="logo.png" alt="Logo" style="width: 24px; height: 24px;">
+                <h1 style="margin: 0; font-size: 1.2rem;">Saved Articles</h1>
+            </div>
+        </div>
+        
+        <div class="content-area" style="padding-top: 15px;">
+            <div id="saved-container"></div>
+        </div>
+  
+        <div class="bottom-nav">
+          <span class="nav-item nav-btn-feed">Feed</span>
+          <span class="nav-item nav-btn-search">Search</span>
+          <span class="nav-item active nav-btn-saved">Saved</span>
+          <span class="nav-item nav-btn-profile">Profile</span>
+        </div>
+    </div>
+
+    <!-- Screen 5: Article Detail -->
     <div class="screen" id="screen-article-detail">
-      <div class="top-header" style="padding: 15px 24px 10px; margin: 0; border-bottom: none; background: #fff; z-index: 10; flex-direction: row; justify-content: space-between;">
-        <div id="btn-back-feed" style="font-size: 0.85rem; font-weight: 700; color: var(--brand-orange); cursor: pointer;">← Back to Feed</div>
-        <img src="logo.png" alt="Logo" style="width: 32px; height: 32px;">
+      <div class="top-header" style="padding: 15px 24px 10px; margin: 0; border-bottom: none; background: #fff; z-index: 10; flex-direction: row; justify-content: space-between; align-items: center;">
+        <div id="btn-back-feed" style="font-size: 0.85rem; font-weight: 700; color: var(--brand-orange); cursor: pointer;">← Back</div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <button id="detail-bookmark-btn" class="bookmark-btn" onclick="toggleSaveFromDetail()">
+                <!-- SVG dynamically injected here -->
+            </button>
+            <img src="logo.png" alt="Logo" style="width: 32px; height: 32px;">
+        </div>
       </div>
       
       <div class="content-area" style="padding: 0 24px 80px 24px;">
         <div style="margin-bottom: 15px;">
-            <span id="detailCategory" class="card-category">CATEGORY</span>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span id="detailCategory" class="card-category">CATEGORY</span>
+                <span id="detailDate" style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">Date</span>
+            </div>
             <h2 id="detailHeadline" style="font-size: 1.35rem; font-weight: 800; line-height: 1.3; margin-top: 0.4rem; color: var(--brand-black);">Headline Here</h2>
         </div>
         <div style="font-size: 0.95rem; line-height: 1.6; color: var(--brand-dark); margin-bottom: 24px;">
@@ -345,7 +417,7 @@
       </div>
     </div>
 
-    <!-- Screen 3: Action (Checkout) -->
+    <!-- Screen 6: Action (Checkout) -->
     <div class="screen" id="screen-checkout">
       <div class="content-area">
         <div class="top-header" style="flex-direction: row; justify-content: space-between;">
@@ -380,7 +452,7 @@
       </div>
     </div>
 
-    <!-- Screen 4: Result (Confirmation) -->
+    <!-- Screen 7: Result (Confirmation) -->
     <div class="screen" id="screen-result">
       <div class="content-area" style="text-align: center; padding-top: 40px;">
         <img src="logo.png" alt="Logo" style="width: 48px; height: 48px; margin: 0 auto 20px; display: block;">
@@ -391,7 +463,7 @@
       </div>
     </div>
 
-    <!-- Screen 5: Profile Settings -->
+    <!-- Screen 8: Profile Settings -->
     <div class="screen" id="screen-profile">
       <div class="content-area">
         <div class="top-header" style="flex-direction: row; justify-content: space-between; border-bottom: none;">
@@ -434,20 +506,23 @@
       </div>
       
       <div class="bottom-nav">
-        <span class="nav-item" id="nav-btn-feed-2">Feed</span>
-        <span class="nav-item" id="nav-btn-search-2">Search</span>
-        <span class="nav-item">Saved</span>
-        <span class="nav-item active">Profile</span>
+        <span class="nav-item nav-btn-feed">Feed</span>
+        <span class="nav-item nav-btn-search">Search</span>
+        <span class="nav-item nav-btn-saved">Saved</span>
+        <span class="nav-item active nav-btn-profile">Profile</span>
       </div>
     </div>
 
   </div>
 
   <script>
+    // FULL 15-ARTICLE DATABASE WITH EXPLICIT PUBLISH TIMES AND FORMATTED DATES
     const articles = [
+        // --- TODAY ---
         {
             id: 12, title: 'Trump Demands Iran Pay War Reparations Amid Surging Regional Tensions',
             category: 'politics', categoryLabel: 'Politics', summary: 'Following warnings over the Strait of Hormuz, Donald Trump has demanded that Tehran pay financial reparations for past military casualties before sanctions are lifted.',
+            publishTime: '2026-09-05T09:15:00Z', timeGroup: 'Today', displayDate: 'Today, 9:15 AM',
             factCheckScore: 68, factuality: 'Mixed', left: 55, center: 10, right: 35, outletsCount: 205, blindspot: 'Left Blindspot',
             ownershipDistribution: { conglomerate: 65, private: 20, public: 15 },
             outlets: {
@@ -459,24 +534,27 @@
                 farRight: [{ name: 'Fox News', domain: 'foxnews.com', owner: 'Fox Corporation (Murdoch Family)' }, { name: 'New York Post', domain: 'nypost.com', owner: 'News Corp (Murdoch Family)' }],
                 extRight: [{ name: 'Washington Times', domain: 'washingtontimes.com', owner: 'Operations Holdings (Unification Church)' }, { name: 'Breitbart', domain: 'breitbart.com', owner: 'Mercer Family / Private Investors' }]
             },
-            content: `<p><strong>August 16, 2026</strong> - Following warnings over the Strait of Hormuz, Donald Trump has demanded that Tehran pay financial reparations for past military casualties before sanctions are lifted.</p>`
+            content: `<p><strong>WASHINGTON</strong> - Following warnings over the Strait of Hormuz, Donald Trump has demanded that Tehran pay financial reparations for past military casualties before sanctions are lifted.</p>`
         },
         {
-            id: 1, title: 'NASA Highlights Partial Lunar Eclipse for August 2026',
-            category: 'science', categoryLabel: 'Science & Environment', summary: 'NASA issues observational guidance for the upcoming partial lunar eclipse visible across the Americas, Europe, and Africa.',
-            factCheckScore: 95, factuality: 'High', left: 30, center: 45, right: 25, outletsCount: 84,
-            ownershipDistribution: { conglomerate: 45, private: 35, public: 20 },
+            id: 15, title: 'AI Chip Export Restrictions Tightened Ahead of Global Tech Summit',
+            category: 'conflict', categoryLabel: 'Geopolitics & Tech', summary: 'The U.S. Commerce Department has issued a new round of stringent export controls targeting next-generation AI processors and advanced semiconductor manufacturing equipment.',
+            publishTime: '2026-09-05T08:30:00Z', timeGroup: 'Today', displayDate: 'Today, 8:30 AM',
+            factCheckScore: 95, factuality: 'High', left: 25, center: 50, right: 25, outletsCount: 156,
+            ownershipDistribution: { conglomerate: 80, private: 10, public: 10 },
             outlets: {
-                extLeft: [], farLeft: [{ name: 'Slate', domain: 'slate.com', owner: 'The Slate Group' }],
-                leanLeft: [{ name: 'The Verge', domain: 'theverge.com', owner: 'Vox Media' }, { name: 'Scientific American', domain: 'scientificamerican.com', owner: 'Springer Nature' }],
-                center: [{ name: 'Reuters', domain: 'reuters.com', owner: 'Thomson Reuters Corp.' }, { name: 'Space.com', domain: 'space.com', owner: 'Future plc' }],
-                leanRight: [], farRight: [{ name: 'Fox Weather', domain: 'foxweather.com', owner: 'Fox Corporation' }], extRight: [{ name: 'Daily Wire', domain: 'dailywire.com', owner: 'Bentkey Ventures' }]
+                extLeft: [], farLeft: [],
+                leanLeft: [{ name: 'New York Times', domain: 'nytimes.com', owner: 'The New York Times Company' }],
+                center: [{ name: 'Financial Times', domain: 'ft.com', owner: 'Nikkei Inc.' }, { name: 'Associated Press', domain: 'apnews.com', owner: 'The AP News Cooperative' }],
+                leanRight: [{ name: 'CNBC', domain: 'cnbc.com', owner: 'NBCUniversal' }],
+                farRight: [{ name: 'Fox Business', domain: 'foxbusiness.com', owner: 'Fox Corporation' }], extRight: []
             },
-            content: `<p><strong>August 16, 2026</strong> - Skywatchers have another celestial event to look forward to this month. A partial lunar eclipse will take place on August 27-28, 2026, according to NASA. The event occurs when the Moon passes partially through Earth's shadow.</p><p>NASA lists the eclipse as visible across the Americas, Europe, and Africa. Unlike a solar eclipse, you can safely watch a lunar eclipse with your naked eyes. The greatest eclipse will peak at 4:14 a.m. UTC on August 28.</p>`
+            content: `<p><strong>WASHINGTON</strong> - The Biden administration announced tighter restrictions on the export of cutting-edge artificial intelligence semiconductors, attempting to close loopholes from previous policy guidelines.</p><p>The announcement precedes a highly anticipated global technology summit where international tech dominance and supply chain sovereignty are expected to be the primary topics of debate.</p>`
         },
         {
             id: 2, title: 'US Central Command Deploys USS George H.W. Bush in Arabian Sea',
             category: 'conflict', categoryLabel: 'Conflict & Defense', summary: 'US Central Command releases operational photos of flight deck sorties in the Arabian Sea amid naval security operations.',
+            publishTime: '2026-09-05T06:15:00Z', timeGroup: 'Today', displayDate: 'Today, 6:15 AM',
             factCheckScore: 91, factuality: 'High', left: 22, center: 38, right: 40, outletsCount: 112, blindspot: 'Right Lean Heavy',
             ownershipDistribution: { conglomerate: 55, private: 30, public: 15 },
             outlets: {
@@ -486,50 +564,12 @@
                 leanRight: [{ name: 'Washington Examiner', domain: 'washingtonexaminer.com', owner: 'Clarity Media Group (Philip Anschutz)' }],
                 farRight: [{ name: 'Fox News', domain: 'foxnews.com', owner: 'Fox Corporation (Murdoch Family)' }, { name: 'National Review', domain: 'nationalreview.com', owner: 'National Review Institute' }], extRight: []
             },
-            content: `<p><strong>August 16, 2026</strong> - The US Central Command posted images showing fighter jets taking off from the USS George H.W. Bush flight deck in the Arabian Sea. The deployment is part of a routine carrier rotation meant to support security in the Middle East.</p><p>The nuclear-powered aircraft carrier's presence comes amid heightened regional tensions and ongoing naval operations to secure international shipping lanes.</p>`
-        },
-        {
-            id: 3, title: 'Morocco Foils Mass Irregular Migration Attempt Toward Ceuta Enclave',
-            category: 'immigration', categoryLabel: 'Immigration', summary: 'Moroccan authorities intercept over 300 individuals attempting to cross into the Spanish northern territory of Ceuta.',
-            factCheckScore: 72, factuality: 'Mixed', left: 45, center: 30, right: 25, outletsCount: 67,
-            ownershipDistribution: { conglomerate: 40, private: 25, public: 35 },
-            outlets: {
-                extLeft: [], farLeft: [{ name: 'Le Monde', domain: 'lemonde.fr', owner: 'Le Monde SA (Independent Trust)' }],
-                leanLeft: [{ name: 'El País', domain: 'elpais.com', owner: 'PRISA Group' }, { name: 'The Guardian', domain: 'theguardian.com', owner: 'Scott Trust Limited' }],
-                center: [{ name: 'AFP', domain: 'afp.com', owner: 'Agence France-Presse (Public Trust)' }, { name: 'EFE Agency', domain: 'efe.com', owner: 'SEPI (Spanish State Holding)' }, { name: 'EuroNews', domain: 'euronews.com', owner: 'Alpac Capital / European Broadcasters' }],
-                leanRight: [], farRight: [{ name: 'ABC Spain', domain: 'abc.es', owner: 'Vocento Group' }, { name: 'The Telegraph', domain: 'telegraph.co.uk', owner: 'RedBird IMI / Telegraph Media Group' }], extRight: []
-            },
-            content: `<p><strong>August 16, 2026</strong> - Moroccan authorities thwarted a mass attempt by irregular migrants to cross from the northern city of Fnideq into the Spanish enclave of Ceuta on Saturday.</p><p>Around 300 individuals, primarily from sub-Saharan African countries, gathered in the mountainous terrain. Heavy security deployments prevented border breaches, and the border crossing operations remain normal.</p>`
-        },
-        {
-            id: 4, title: 'Czechia Extends Temporary Protection for Ukrainian Refugees to 2028',
-            category: 'immigration', categoryLabel: 'Immigration & Politics', summary: 'The Czech Ministry of the Interior confirms temporary protection extension through March 2028 alongside new registration protocols for military-age males.',
-            factCheckScore: 94, factuality: 'High', left: 35, center: 50, right: 15, outletsCount: 53,
-            ownershipDistribution: { conglomerate: 30, private: 20, public: 50 },
-            outlets: {
-                extLeft: [], farLeft: [],
-                leanLeft: [{ name: 'Deník N', domain: 'denikn.cz', owner: 'N Media a.s. (Independent Publishers)' }, { name: 'Balkan Insight', domain: 'balkaninsight.com', owner: 'BIRN (Non-Profit NGO)' }],
-                center: [{ name: 'ČTK', domain: 'ctk.cz', owner: 'Czech News Agency (Public Body)' }, { name: 'Radio Prague International', domain: 'english.radio.cz', owner: 'Czech Radio (Public Media)' }, { name: 'DW News', domain: 'dw.com', owner: 'Deutsche Welle (German Public Body)' }],
-                leanRight: [], farRight: [{ name: 'Echo24', domain: 'echo24.cz', owner: 'Echo Media a.s. (Marek Španěl)' }], extRight: []
-            },
-            content: `<p><strong>August 5, 2026</strong> - The Czech Ministry of the Interior confirmed that temporary protection for people displaced from Ukraine will be extended until March 31, 2028.</p><p>However, new conditions apply to male applicants aged 18 to 60 subject to compulsory military service. They must now register in the Reserv+ app and provide evidence of fulfilling their military obligations when submitting new applications.</p>`
-        },
-        {
-            id: 5, title: 'Iran Detains Two French Diplomats Over Alleged Foreign Interference',
-            category: 'politics', categoryLabel: 'Politics & Diplomacy', summary: 'Iranian intelligence briefly detains two accredited French diplomats during high-security arrests in Tehran before releasing them to the French embassy.',
-            factCheckScore: 71, factuality: 'Mixed', left: 40, center: 20, right: 40, outletsCount: 91,
-            ownershipDistribution: { conglomerate: 45, private: 25, public: 30 },
-            outlets: {
-                extLeft: [], farLeft: [{ name: 'Liberation', domain: 'liberation.fr', owner: 'Fondation pour une presse libre (Altice)' }],
-                leanLeft: [{ name: 'France 24', domain: 'france24.com', owner: 'France Médias Monde (French State)' }],
-                center: [{ name: 'AFP', domain: 'afp.com', owner: 'Agence France-Presse (Public Trust)' }, { name: 'Reuters', domain: 'reuters.com', owner: 'Thomson Reuters Corp.' }],
-                leanRight: [], farRight: [{ name: 'Jerusalem Post', domain: 'jpost.com', owner: 'The Jerusalem Post Group (Eli Azur)' }, { name: 'The Sun', domain: 'thesun.co.uk', owner: 'News Corp UK (Murdoch Family)' }], extRight: []
-            },
-            content: `<p><strong>August 16, 2026</strong> - Iran's Intelligence Ministry stated that two French diplomats were briefly detained during a national security investigation.</p><p>The intelligence units encountered the diplomats while executing judicial arrests for two suspects involved in foreign influence operations. Following identity verification, the diplomats were handed back to the French ambassador.</p>`
+            content: `<p><strong>MANAMA</strong> - The US Central Command posted images showing fighter jets taking off from the USS George H.W. Bush flight deck in the Arabian Sea. The deployment is part of a routine carrier rotation meant to support security in the Middle East.</p><p>The nuclear-powered aircraft carrier's presence comes amid heightened regional tensions and ongoing naval operations to secure international shipping lanes.</p>`
         },
         {
             id: 6, title: 'Zawiya Power Plant Explosion Knocks Out Electricity in Western Libya',
             category: 'conflict', categoryLabel: 'Conflict & Energy', summary: 'An explosion near Libya’s western Zawiya electrical facility triggers automatic grid shutdowns and widespread regional power outages.',
+            publishTime: '2026-09-05T04:00:00Z', timeGroup: 'Today', displayDate: 'Today, 4:00 AM',
             factCheckScore: 89, factuality: 'High', left: 20, center: 65, right: 15, outletsCount: 29,
             ownershipDistribution: { conglomerate: 50, private: 30, public: 20 },
             outlets: {
@@ -538,11 +578,56 @@
                 center: [{ name: 'Libya Observer', domain: 'libyaobserver.ly', owner: 'Libya Observer Media Group' }, { name: 'Reuters', domain: 'reuters.com', owner: 'Thomson Reuters Corp.' }, { name: 'Bloomberg', domain: 'bloomberg.com', owner: 'Bloomberg LP (Michael Bloomberg)' }],
                 leanRight: [], farRight: [{ name: 'The National News', domain: 'thenationalnews.com', owner: 'International Media Investments (UAE)' }], extRight: []
             },
-            content: `<p><strong>August 16, 2026</strong> - A major explosion occurred Saturday near the Zawiya power plant in western Libya, causing severe damage.</p><p>The state-owned General Electricity Company of Libya (GECOL) confirmed the blast knocked several electricity generation units out of service, causing widespread grid instability and blackouts in surrounding regions.</p>`
+            content: `<p><strong>TRIPOLI</strong> - A major explosion occurred early this morning near the Zawiya power plant in western Libya, causing severe damage.</p><p>The state-owned General Electricity Company of Libya (GECOL) confirmed the blast knocked several electricity generation units out of service, causing widespread grid instability and blackouts in surrounding regions.</p>`
+        },
+
+        // --- THIS WEEK ---
+        {
+            id: 1, title: 'NASA Highlights Partial Lunar Eclipse for August 2026',
+            category: 'science', categoryLabel: 'Science & Environment', summary: 'NASA issues observational guidance for the upcoming partial lunar eclipse visible across the Americas, Europe, and Africa.',
+            publishTime: '2026-09-02T14:20:00Z', timeGroup: 'This Week', displayDate: 'Wed, Sep 2',
+            factCheckScore: 95, factuality: 'High', left: 30, center: 45, right: 25, outletsCount: 84,
+            ownershipDistribution: { conglomerate: 45, private: 35, public: 20 },
+            outlets: {
+                extLeft: [], farLeft: [{ name: 'Slate', domain: 'slate.com', owner: 'The Slate Group' }],
+                leanLeft: [{ name: 'The Verge', domain: 'theverge.com', owner: 'Vox Media' }, { name: 'Scientific American', domain: 'scientificamerican.com', owner: 'Springer Nature' }],
+                center: [{ name: 'Reuters', domain: 'reuters.com', owner: 'Thomson Reuters Corp.' }, { name: 'Space.com', domain: 'space.com', owner: 'Future plc' }],
+                leanRight: [], farRight: [{ name: 'Fox Weather', domain: 'foxweather.com', owner: 'Fox Corporation' }], extRight: [{ name: 'Daily Wire', domain: 'dailywire.com', owner: 'Bentkey Ventures' }]
+            },
+            content: `<p><strong>WASHINGTON</strong> - Skywatchers have another celestial event to look forward to this month. A partial lunar eclipse will take place soon, according to NASA. The event occurs when the Moon passes partially through Earth's shadow.</p><p>NASA lists the eclipse as visible across the Americas, Europe, and Africa. Unlike a solar eclipse, you can safely watch a lunar eclipse with your naked eyes.</p>`
+        },
+        {
+            id: 3, title: 'Morocco Foils Mass Irregular Migration Attempt Toward Ceuta Enclave',
+            category: 'immigration', categoryLabel: 'Immigration', summary: 'Moroccan authorities intercept over 300 individuals attempting to cross into the Spanish northern territory of Ceuta.',
+            publishTime: '2026-09-01T11:00:00Z', timeGroup: 'This Week', displayDate: 'Tue, Sep 1',
+            factCheckScore: 72, factuality: 'Mixed', left: 45, center: 30, right: 25, outletsCount: 67,
+            ownershipDistribution: { conglomerate: 40, private: 25, public: 35 },
+            outlets: {
+                extLeft: [], farLeft: [{ name: 'Le Monde', domain: 'lemonde.fr', owner: 'Le Monde SA (Independent Trust)' }],
+                leanLeft: [{ name: 'El País', domain: 'elpais.com', owner: 'PRISA Group' }, { name: 'The Guardian', domain: 'theguardian.com', owner: 'Scott Trust Limited' }],
+                center: [{ name: 'AFP', domain: 'afp.com', owner: 'Agence France-Presse (Public Trust)' }, { name: 'EFE Agency', domain: 'efe.com', owner: 'SEPI (Spanish State Holding)' }, { name: 'EuroNews', domain: 'euronews.com', owner: 'Alpac Capital / European Broadcasters' }],
+                leanRight: [], farRight: [{ name: 'ABC Spain', domain: 'abc.es', owner: 'Vocento Group' }, { name: 'The Telegraph', domain: 'telegraph.co.uk', owner: 'RedBird IMI / Telegraph Media Group' }], extRight: []
+            },
+            content: `<p><strong>RABAT</strong> - Moroccan authorities thwarted a mass attempt by irregular migrants to cross from the northern city of Fnideq into the Spanish enclave of Ceuta.</p><p>Around 300 individuals, primarily from sub-Saharan African countries, gathered in the mountainous terrain. Heavy security deployments prevented border breaches, and the border crossing operations remain normal.</p>`
+        },
+        {
+            id: 5, title: 'Iran Detains Two French Diplomats Over Alleged Foreign Interference',
+            category: 'politics', categoryLabel: 'Politics & Diplomacy', summary: 'Iranian intelligence briefly detains two accredited French diplomats during high-security arrests in Tehran before releasing them to the French embassy.',
+            publishTime: '2026-08-31T15:30:00Z', timeGroup: 'This Week', displayDate: 'Mon, Aug 31',
+            factCheckScore: 71, factuality: 'Mixed', left: 40, center: 20, right: 40, outletsCount: 91,
+            ownershipDistribution: { conglomerate: 45, private: 25, public: 30 },
+            outlets: {
+                extLeft: [], farLeft: [{ name: 'Liberation', domain: 'liberation.fr', owner: 'Fondation pour une presse libre (Altice)' }],
+                leanLeft: [{ name: 'France 24', domain: 'france24.com', owner: 'France Médias Monde (French State)' }],
+                center: [{ name: 'AFP', domain: 'afp.com', owner: 'Agence France-Presse (Public Trust)' }, { name: 'Reuters', domain: 'reuters.com', owner: 'Thomson Reuters Corp.' }],
+                leanRight: [], farRight: [{ name: 'Jerusalem Post', domain: 'jpost.com', owner: 'The Jerusalem Post Group (Eli Azur)' }, { name: 'The Sun', domain: 'thesun.co.uk', owner: 'News Corp UK (Murdoch Family)' }], extRight: []
+            },
+            content: `<p><strong>TEHRAN</strong> - Iran's Intelligence Ministry stated that two French diplomats were briefly detained during a national security investigation.</p><p>The intelligence units encountered the diplomats while executing judicial arrests for two suspects involved in foreign influence operations. Following identity verification, the diplomats were handed back to the French ambassador.</p>`
         },
         {
             id: 7, title: 'South Korea Dismisses Top Trade Negotiator Amid US Tariff Pressures',
             category: 'economy', categoryLabel: 'Economy & Trade', summary: 'Seoul relieves chief trade envoy Yeo Han-koo of duties following escalating negotiations over newly proposed US automotive and tech tariffs.',
+            publishTime: '2026-08-30T20:00:00Z', timeGroup: 'This Week', displayDate: 'Sun, Aug 30',
             factCheckScore: 92, factuality: 'High', left: 30, center: 40, right: 30, outletsCount: 76,
             ownershipDistribution: { conglomerate: 60, private: 25, public: 15 },
             outlets: {
@@ -551,11 +636,12 @@
                 center: [{ name: 'Yonhap News', domain: 'en.yna.co.kr', owner: 'Yonhap News Agency (Public Subvention)' }, { name: 'Financial Times', domain: 'ft.com', owner: 'Nikkei Inc.' }, { name: 'Bloomberg', domain: 'bloomberg.com', owner: 'Bloomberg LP' }],
                 leanRight: [], farRight: [{ name: 'Chosun Ilbo', domain: 'english.chosun.com', owner: 'Chosun Ilbo Company (Bang Family)' }, { name: 'Wall Street Journal', domain: 'wsj.com', owner: 'News Corp (Murdoch Family)' }], extRight: []
             },
-            content: `<p><strong>August 16, 2026</strong> - South Korea has dismissed its chief trade negotiator, Yeo Han-koo, as Seoul faces mounting diplomatic pressure from the United States over sweeping tariffs.</p><p>According to Yonhap News, unresolved trade issues and investment commitments forced the structural change in Seoul's foreign commerce leadership.</p>`
+            content: `<p><strong>SEOUL</strong> - South Korea has dismissed its chief trade negotiator, Yeo Han-koo, as Seoul faces mounting diplomatic pressure from the United States over sweeping tariffs.</p><p>According to Yonhap News, unresolved trade issues and investment commitments forced the structural change in Seoul's foreign commerce leadership.</p>`
         },
         {
             id: 8, title: '7.7-Magnitude Earthquake Strikes Eastern Indonesia, 47 Killed',
             category: 'science', categoryLabel: 'Natural Disasters', summary: 'Seismologists record a 7.7 undersea earthquake triggering localized tsunami warnings and structural damage across eastern islands.',
+            publishTime: '2026-08-30T03:10:00Z', timeGroup: 'This Week', displayDate: 'Sun, Aug 30',
             factCheckScore: 96, factuality: 'High', left: 25, center: 55, right: 20, outletsCount: 145,
             ownershipDistribution: { conglomerate: 45, private: 25, public: 30 },
             outlets: {
@@ -564,11 +650,28 @@
                 center: [{ name: 'Antara News', domain: 'en.antaranews.com', owner: 'LKBN Antara (Indonesian State Media)' }, { name: 'BBC World', domain: 'bbc.com', owner: 'British Broadcasting Corporation (Charter)' }, { name: 'Reuters', domain: 'reuters.com', owner: 'Thomson Reuters Corp.' }],
                 leanRight: [], farRight: [{ name: 'Fox News', domain: 'foxnews.com', owner: 'Fox Corporation' }, { name: 'Sky News Australia', domain: 'skynews.com.au', owner: 'News Corp Australia' }], extRight: []
             },
-            content: `<p><strong>August 16, 2026</strong> - At least 47 people have been reported killed and scores injured after a powerful 7.7-magnitude earthquake struck eastern Indonesia early Saturday morning.</p><p>The quake caused widespread destruction, damaging hundreds of residential homes and public facilities. Rescue operations are currently underway as aftershocks continue to hit the region.</p>`
+            content: `<p><strong>JAKARTA</strong> - At least 47 people have been reported killed and scores injured after a powerful 7.7-magnitude earthquake struck eastern Indonesia.</p><p>The quake caused widespread destruction, damaging hundreds of residential homes and public facilities. Rescue operations are currently underway as aftershocks continue to hit the region.</p>`
+        },
+
+        // --- THIS MONTH ---
+        {
+            id: 4, title: 'Czechia Extends Temporary Protection for Ukrainian Refugees to 2028',
+            category: 'immigration', categoryLabel: 'Immigration & Politics', summary: 'The Czech Ministry of the Interior confirms temporary protection extension through March 2028 alongside new registration protocols for military-age males.',
+            publishTime: '2026-08-25T13:45:00Z', timeGroup: 'This Month', displayDate: 'Aug 25, 2026',
+            factCheckScore: 94, factuality: 'High', left: 35, center: 50, right: 15, outletsCount: 53,
+            ownershipDistribution: { conglomerate: 30, private: 20, public: 50 },
+            outlets: {
+                extLeft: [], farLeft: [],
+                leanLeft: [{ name: 'Deník N', domain: 'denikn.cz', owner: 'N Media a.s. (Independent Publishers)' }, { name: 'Balkan Insight', domain: 'balkaninsight.com', owner: 'BIRN (Non-Profit NGO)' }],
+                center: [{ name: 'ČTK', domain: 'ctk.cz', owner: 'Czech News Agency (Public Body)' }, { name: 'Radio Prague International', domain: 'english.radio.cz', owner: 'Czech Radio (Public Media)' }, { name: 'DW News', domain: 'dw.com', owner: 'Deutsche Welle (German Public Body)' }],
+                leanRight: [], farRight: [{ name: 'Echo24', domain: 'echo24.cz', owner: 'Echo Media a.s. (Marek Španěl)' }], extRight: []
+            },
+            content: `<p><strong>PRAGUE</strong> - The Czech Ministry of the Interior confirmed that temporary protection for people displaced from Ukraine will be extended until March 31, 2028.</p><p>However, new conditions apply to male applicants aged 18 to 60 subject to compulsory military service. They must now register in the Reserv+ app and provide evidence of fulfilling their military obligations when submitting new applications.</p>`
         },
         {
             id: 9, title: 'Sevilla Defeats Rayo Vallecano 2-1 in La Liga 2026-27 Opener',
             category: 'economy', categoryLabel: 'Sports & Society', summary: 'Sevilla rallies with two second-half goals at home to claim opening three points in the 2026-27 Spanish football season.',
+            publishTime: '2026-08-22T21:30:00Z', timeGroup: 'This Month', displayDate: 'Aug 22, 2026',
             factCheckScore: 98, factuality: 'High', left: 10, center: 80, right: 10, outletsCount: 42,
             ownershipDistribution: { conglomerate: 75, private: 15, public: 10 },
             outlets: {
@@ -577,11 +680,12 @@
                 center: [{ name: 'ESPN', domain: 'espn.com', owner: 'The Walt Disney Company (80%) / Hearst (20%)' }, { name: 'BBC Sport', domain: 'bbc.com', owner: 'British Broadcasting Corporation' }, { name: 'The Athletic', domain: 'theathletic.com', owner: 'The New York Times Company' }],
                 leanRight: [], farRight: [{ name: 'AS Sports', domain: 'en.as.com', owner: 'PRISA Group' }], extRight: []
             },
-            content: `<p><strong>August 16, 2026</strong> - Sevilla staged a dramatic comeback to defeat Rayo Vallecano 2-1 on Saturday, marking a thrilling start to their 2026-27 La Liga campaign.</p><p>Falling behind early, Sevilla rallied with two crucial second-half penalties at the Ramon Sanchez-Pizjuan stadium, securing their first three points of the season in front of a roaring home crowd.</p>`
+            content: `<p><strong>SEVILLE</strong> - Sevilla staged a dramatic comeback to defeat Rayo Vallecano 2-1, marking a thrilling start to their 2026-27 La Liga campaign.</p><p>Falling behind early, Sevilla rallied with two crucial second-half penalties at the Ramon Sanchez-Pizjuan stadium, securing their first three points of the season in front of a roaring home crowd.</p>`
         },
         {
             id: 10, title: 'Severe Drought Covers Most of Czechia, Cyanobacteria Warnings Issued',
             category: 'science', categoryLabel: 'Science & Environment', summary: 'Prolonged high temperatures cause critical drops in Czech reservoir levels and dangerous algae blooms prohibiting swimming in key recreational lakes.',
+            publishTime: '2026-08-18T10:20:00Z', timeGroup: 'This Month', displayDate: 'Aug 18, 2026',
             factCheckScore: 93, factuality: 'High', left: 45, center: 45, right: 10, outletsCount: 31,
             ownershipDistribution: { conglomerate: 35, private: 25, public: 40 },
             outlets: {
@@ -590,11 +694,12 @@
                 center: [{ name: 'Česká televize', domain: 'ct24.ceskatelevize.cz', owner: 'Czech Television (Public Broadcaster)' }, { name: 'Prague Morning', domain: 'praguemorning.cz', owner: 'Prague Morning Media s.r.o.' }, { name: 'MeteoPress', domain: 'meteopress.cz', owner: 'Meteopress Weather Services' }],
                 leanRight: [], farRight: [{ name: 'Mladá fronta DNES', domain: 'idnes.cz', owner: 'KAPRAIN Group (Karel Pražák)' }], extRight: []
             },
-            content: `<p><strong>August 16, 2026</strong> - Meteorologists warn that a severe and prolonged drought has now blanketed the vast majority of the Czech Republic.</p><p>The soaring temperatures and lack of rainfall have also led to dangerous cyanobacteria blooms in popular Czech lakes and reservoirs, prompting health officials to ban swimming in several key recreational areas.</p>`
+            content: `<p><strong>PRAGUE</strong> - Meteorologists warn that a severe and prolonged drought has now blanketed the vast majority of the Czech Republic.</p><p>The soaring temperatures and lack of rainfall have also led to dangerous cyanobacteria blooms in popular Czech lakes and reservoirs, prompting health officials to ban swimming in several key recreational areas.</p>`
         },
         {
             id: 11, title: 'Czech Drug Control Institute Recalls Rowatinex Over Quality Defect',
             category: 'science', categoryLabel: 'Health & Regulations', summary: 'SÚKL orders immediate pharmacy withdrawal of two Rowatinex capsule batches following failing peroxide degradation threshold tests.',
+            publishTime: '2026-08-16T14:00:00Z', timeGroup: 'This Month', displayDate: 'Aug 16, 2026',
             factCheckScore: 97, factuality: 'High', left: 15, center: 70, right: 15, outletsCount: 18,
             ownershipDistribution: { conglomerate: 30, private: 20, public: 50 },
             outlets: {
@@ -603,19 +708,95 @@
                 center: [{ name: 'SÚKL Official Press', domain: 'sukl.cz', owner: 'Czech Ministry of Health (State Body)' }, { name: 'ČTK Medical Desk', domain: 'ceskenoviny.cz', owner: 'Czech News Agency (Public Body)' }, { name: 'Zdravotnický deník', domain: 'zdravotnickydenik.cz', owner: 'Media Network s.r.o.' }],
                 leanRight: [], farRight: [{ name: 'Lidové noviny', domain: 'lidovky.cz', owner: 'KAPRAIN Group (Karel Pražák)' }], extRight: []
             },
-            content: `<p><strong>August 16, 2026</strong> - SÚKL orders immediate pharmacy withdrawal of two Rowatinex capsule batches following failing peroxide degradation threshold tests.</p>`
+            content: `<p><strong>PRAGUE</strong> - SÚKL orders immediate pharmacy withdrawal of two Rowatinex capsule batches following failing peroxide degradation threshold tests.</p>`
+        },
+
+        // --- EARLIER ---
+        {
+            id: 13, title: 'EU Antitrust Regulators Probe Big Tech AI Cloud Partnerships',
+            category: 'economy', categoryLabel: 'Economy & Tech', summary: 'The European Commission has officially opened an antitrust investigation into exclusive cloud computing partnerships between dominant tech firms and AI startup ecosystems.',
+            publishTime: '2026-07-28T09:00:00Z', timeGroup: 'Earlier', displayDate: 'Jul 28, 2026',
+            factCheckScore: 88, factuality: 'High', left: 45, center: 40, right: 15, outletsCount: 132, blindspot: 'Right Blindspot',
+            ownershipDistribution: { conglomerate: 70, private: 10, public: 20 },
+            outlets: {
+                extLeft: [], farLeft: [{ name: 'Wired', domain: 'wired.com', owner: 'Condé Nast' }],
+                leanLeft: [{ name: 'The Verge', domain: 'theverge.com', owner: 'Vox Media' }],
+                center: [{ name: 'Bloomberg', domain: 'bloomberg.com', owner: 'Bloomberg LP' }, { name: 'Reuters', domain: 'reuters.com', owner: 'Thomson Reuters Corp.' }],
+                leanRight: [{ name: 'Wall Street Journal', domain: 'wsj.com', owner: 'News Corp' }],
+                farRight: [], extRight: []
+            },
+            content: `<p><strong>BRUSSELS</strong> - European Union regulators have stepped up their scrutiny of the tech industry, announcing a formal investigation into massive investments made by big tech firms into generative AI startups.</p><p>Regulators are concerned that locking AI models into specific cloud infrastructures creates unfair market barriers, stifling competition across the continent's digital economy.</p>`
+        },
+        {
+            id: 14, title: 'Germany Reopens Debate on Nuclear Reactor Decommissioning Timeline',
+            category: 'politics', categoryLabel: 'Energy & Policy', summary: 'Amidst ongoing energy cost concerns and missed climate targets, leading German coalition members propose pausing the final phase of domestic nuclear decommissions.',
+            publishTime: '2026-07-20T16:45:00Z', timeGroup: 'Earlier', displayDate: 'Jul 20, 2026',
+            factCheckScore: 85, factuality: 'Mixed', left: 30, center: 30, right: 40, outletsCount: 94,
+            ownershipDistribution: { conglomerate: 45, private: 15, public: 40 },
+            outlets: {
+                extLeft: [], farLeft: [{ name: 'Der Spiegel', domain: 'spiegel.de', owner: 'Spiegel-Verlag' }],
+                leanLeft: [{ name: 'Süddeutsche Zeitung', domain: 'sueddeutsche.de', owner: 'SWMH' }],
+                center: [{ name: 'DW News', domain: 'dw.com', owner: 'Deutsche Welle' }, { name: 'Reuters', domain: 'reuters.com', owner: 'Thomson Reuters Corp.' }],
+                leanRight: [{ name: 'Frankfurter Allgemeine', domain: 'faz.net', owner: 'FAZIT-Stiftung' }],
+                farRight: [{ name: 'Die Welt', domain: 'welt.de', owner: 'Axel Springer SE' }], extRight: []
+            },
+            content: `<p><strong>BERLIN</strong> - Facing pressure from industrial sectors burdened by high electricity costs, prominent voices within the German political coalition are urging a pause on dismantling recently decommissioned nuclear plants.</p><p>While environmental groups are threatening mass protests over backsliding on the historic nuclear phase-out, industrial advocates argue energy security must take precedence as the country attempts to transition fully to renewables.</p>`
         }
     ];
 
+    // Core State Variables
     let currentCategory = 'all';
+    let savedArticleIds = new Set();
+    let previousMainScreen = 'screen-home';
+    let currentDetailArticleId = null;
 
-    // Navigation Logic
+    // Helper: Generate SVG Bookmark Icon
+    function getBookmarkSVG(isSaved) {
+        if (isSaved) {
+            return `<svg width="22" height="22" viewBox="0 0 24 24" fill="var(--brand-orange)"><path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>`;
+        }
+        return `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--brand-orange)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>`;
+    }
+
+    // Toggle Save State Logic
+    function toggleSave(id, event) {
+        if (event) event.stopPropagation();
+        
+        if (savedArticleIds.has(id)) {
+            savedArticleIds.delete(id);
+        } else {
+            savedArticleIds.add(id);
+        }
+
+        renderFeed();
+        renderSaved();
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput.value) {
+            performSearch(searchInput.value);
+        }
+
+        if (currentDetailArticleId === id) {
+            document.getElementById('detail-bookmark-btn').innerHTML = getBookmarkSVG(savedArticleIds.has(id));
+        }
+    }
+
+    // Toggle specifically from the Detail view
+    function toggleSaveFromDetail() {
+        if (currentDetailArticleId !== null) {
+            toggleSave(currentDetailArticleId);
+        }
+    }
+
+    // Navigation Routing Logic
     function navigateTo(targetScreenId) {
+      if (['screen-feed', 'screen-search', 'screen-saved', 'screen-profile'].includes(targetScreenId)) {
+          previousMainScreen = targetScreenId;
+      }
       document.querySelectorAll('.screen').forEach(screen => { screen.classList.remove('active'); });
       document.getElementById(targetScreenId).classList.add('active');
     }
 
-    // Scroll Logic for Category Nav
+    // Horizontal Scrolling for Mobile Nav
     function scrollNav(direction) {
         const nav = document.getElementById('categoryNav');
         const scrollAmount = 150;
@@ -626,7 +807,6 @@
         }
     }
 
-    // Category Filtering Logic
     function filterCategory(cat, element) {
         currentCategory = cat;
         document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
@@ -634,7 +814,36 @@
         renderFeed();
     }
 
-    // Full-Text Search Engine Logic
+    // Unified Card Generator Function
+    function createCardHTML(art) {
+        let blindspotTag = art.blindspot ? `<span style="font-size: 0.65rem; font-weight: 800; padding: 0.2rem 0.5rem; border-radius: 12px; text-transform: uppercase; background: var(--brand-dark); color: white;">${art.blindspot}</span>` : '';
+        const bookmarkIcon = getBookmarkSVG(savedArticleIds.has(art.id));
+        
+        return `
+            <div class="card-top" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <div class="tags" style="margin-bottom: 0;"><span class="tag topic">${art.categoryLabel}</span></div>
+                    <span style="font-size: 0.7rem; font-weight: 700; color: var(--text-muted);">${art.displayDate}</span>
+                    ${blindspotTag}
+                </div>
+                <button class="bookmark-btn" onclick="toggleSave(${art.id}, event)">${bookmarkIcon}</button>
+            </div>
+            <h2 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 1rem; line-height: 1.3;">${art.title}</h2>
+            <div class="bias-bar-wrap" style="margin-bottom: 0.5rem;">
+                <div class="bias-bar" style="height: 6px;">
+                    <div class="seg-left" style="width: ${art.left}%"></div>
+                    <div class="seg-center" style="width: ${art.center}%"></div>
+                    <div class="seg-right" style="width: ${art.right}%"></div>
+                </div>
+            </div>
+            <div class="card-meta" style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--text-muted); padding-top: 0.5rem; border-top: 1px solid var(--border);">
+                <span>Fact-Check: <span class="fact-badge fact-${art.factuality}">${art.factCheckScore}/100</span></span>
+                <span>${art.outletsCount} Outlets</span>
+            </div>
+        `;
+    }
+
+    // Full-Text Search Engine
     function performSearch(query) {
         const container = document.getElementById('search-container');
         const countLabel = document.getElementById('search-results-count');
@@ -662,11 +871,15 @@
                 ${art.categoryLabel} 
                 ${art.factuality} 
                 ${art.blindspot || ''}
+                ${art.displayDate}
                 ${customTags.join(' ')}
             `.toLowerCase();
             
             return searchableText.includes(lowerQuery);
         });
+        
+        // Sort search results descending by date
+        results.sort((a, b) => new Date(b.publishTime) - new Date(a.publishTime));
         
         countLabel.innerText = `${results.length} result${results.length !== 1 ? 's' : ''} found`;
 
@@ -674,32 +887,12 @@
             const card = document.createElement('div');
             card.className = 'card';
             card.onclick = () => openArticle(art.id);
-            
-            let blindspotTag = art.blindspot ? `<span style="font-size: 0.65rem; font-weight: 800; padding: 0.2rem 0.5rem; border-radius: 12px; text-transform: uppercase; background: var(--brand-dark); color: white;">${art.blindspot}</span>` : '';
-            
-            card.innerHTML = `
-                <div class="card-top" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-                    <div class="tags" style="margin-bottom: 0;"><span class="tag topic">${art.categoryLabel}</span></div>
-                    ${blindspotTag}
-                </div>
-                <h2 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 1rem; line-height: 1.3;">${art.title}</h2>
-                <div class="bias-bar-wrap" style="margin-bottom: 0.5rem;">
-                    <div class="bias-bar" style="height: 6px;">
-                        <div class="seg-left" style="width: ${art.left}%"></div>
-                        <div class="seg-center" style="width: ${art.center}%"></div>
-                        <div class="seg-right" style="width: ${art.right}%"></div>
-                    </div>
-                </div>
-                <div class="card-meta" style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--text-muted); padding-top: 0.5rem; border-top: 1px solid var(--border);">
-                    <span>Fact-Check: <span class="fact-badge fact-${art.factuality}">${art.factCheckScore}/100</span></span>
-                    <span>${art.outletsCount} Outlets</span>
-                </div>
-            `;
+            card.innerHTML = createCardHTML(art);
             container.appendChild(card);
         });
     }
 
-    // Populate Feed Dynamically
+    // Populate Main Feed Dynamically (with Chronological Grouping)
     function renderFeed() {
         const feedContainer = document.getElementById('feed-container');
         feedContainer.innerHTML = '';
@@ -708,44 +901,84 @@
             return (currentCategory === 'all' || art.category === currentCategory);
         });
         
-        filteredArticles.forEach(art => {
+        // Sort chronologically (newest first)
+        const sortedArticles = filteredArticles.sort((a, b) => new Date(b.publishTime) - new Date(a.publishTime));
+        
+        let currentGroup = '';
+
+        sortedArticles.forEach(art => {
+            // Check if we need to insert a time demarcation header
+            if (art.timeGroup !== currentGroup) {
+                currentGroup = art.timeGroup;
+                const divider = document.createElement('div');
+                divider.className = 'feed-time-divider';
+                divider.innerHTML = `<span class="feed-time-label">${currentGroup}</span>`;
+                feedContainer.appendChild(divider);
+            }
+
             const card = document.createElement('div');
             card.className = 'card';
             card.onclick = () => openArticle(art.id);
-            
-            let blindspotTag = art.blindspot ? `<span style="font-size: 0.65rem; font-weight: 800; padding: 0.2rem 0.5rem; border-radius: 12px; text-transform: uppercase; background: var(--brand-dark); color: white;">${art.blindspot}</span>` : '';
-            
-            card.innerHTML = `
-                <div class="card-top" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-                    <div class="tags" style="margin-bottom: 0;"><span class="tag topic">${art.categoryLabel}</span></div>
-                    ${blindspotTag}
-                </div>
-                <h2 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 1rem; line-height: 1.3;">${art.title}</h2>
-                <div class="bias-bar-wrap" style="margin-bottom: 0.5rem;">
-                    <div class="bias-bar" style="height: 6px;">
-                        <div class="seg-left" style="width: ${art.left}%"></div>
-                        <div class="seg-center" style="width: ${art.center}%"></div>
-                        <div class="seg-right" style="width: ${art.right}%"></div>
-                    </div>
-                </div>
-                <div class="card-meta" style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--text-muted); padding-top: 0.5rem; border-top: 1px solid var(--border);">
-                    <span>Fact-Check: <span class="fact-badge fact-${art.factuality}">${art.factCheckScore}/100</span></span>
-                    <span>${art.outletsCount} Outlets</span>
-                </div>
-            `;
+            card.innerHTML = createCardHTML(art);
             feedContainer.appendChild(card);
         });
     }
 
-    // Populate Article Detail Screen
+    // Populate Saved View Dynamically (with Chronological Grouping)
+    function renderSaved() {
+        const container = document.getElementById('saved-container');
+        container.innerHTML = '';
+        
+        const savedArticlesList = articles.filter(art => savedArticleIds.has(art.id));
+        
+        if (savedArticlesList.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--border)" stroke-width="2" style="margin-bottom: 10px;">
+                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <h3 style="color: var(--brand-dark); margin-bottom: 5px;">No saved articles</h3>
+                    <p style="font-size: 0.85rem;">Tap the bookmark icon on any digest to save it here for reading later.</p>
+                </div>
+            `;
+            return;
+        }
+
+        const sortedSaved = savedArticlesList.sort((a, b) => new Date(b.publishTime) - new Date(a.publishTime));
+        
+        let currentGroup = '';
+
+        sortedSaved.forEach(art => {
+            if (art.timeGroup !== currentGroup) {
+                currentGroup = art.timeGroup;
+                const divider = document.createElement('div');
+                divider.className = 'feed-time-divider';
+                divider.innerHTML = `<span class="feed-time-label">${currentGroup}</span>`;
+                container.appendChild(divider);
+            }
+
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.onclick = () => openArticle(art.id);
+            card.innerHTML = createCardHTML(art);
+            container.appendChild(card);
+        });
+    }
+
+    // Populate and Route to Article Detail Screen
     function openArticle(id) {
         const article = articles.find(a => a.id === id);
         if (!article) return;
 
+        currentDetailArticleId = article.id;
+
         document.getElementById('detailHeadline').innerText = article.title;
         document.getElementById('detailCategory').innerText = article.categoryLabel;
-        
+        document.getElementById('detailDate').innerText = article.displayDate;
         document.getElementById('detailContent').innerHTML = article.content;
+        
+        // Render current detail bookmark state
+        document.getElementById('detail-bookmark-btn').innerHTML = getBookmarkSVG(savedArticleIds.has(id));
 
         document.getElementById('detailBiasBar').innerHTML = `
             <div class="seg-left" style="width: ${article.left}%"></div>
@@ -808,34 +1041,38 @@
         navigateTo('screen-article-detail');
     }
 
-    // Wiring up Search Field Input
+    // Initial Event Listeners
     document.getElementById('searchInput').addEventListener('input', (e) => {
         performSearch(e.target.value);
     });
 
-    // Wiring up Home / Nav / Action Buttons
     document.getElementById('btn-start-trial').addEventListener('click', () => navigateTo('screen-checkout'));
     document.getElementById('btn-login').addEventListener('click', () => { renderFeed(); navigateTo('screen-feed'); });
     document.getElementById('btn-back-home').addEventListener('click', () => navigateTo('screen-home'));
     document.getElementById('btn-pay').addEventListener('click', () => navigateTo('screen-result'));
     document.getElementById('btn-go-feed-from-success').addEventListener('click', () => { renderFeed(); navigateTo('screen-feed'); });
-    document.getElementById('btn-back-feed').addEventListener('click', () => navigateTo('screen-feed'));
-
-    // Wiring up Logout Buttons
+    
+    // Universal Back Button to return to the correct list view
+    document.getElementById('btn-back-feed').addEventListener('click', () => navigateTo(previousMainScreen));
+    
     document.getElementById('btn-logout').addEventListener('click', () => navigateTo('screen-home'));
     document.getElementById('btn-logout-profile').addEventListener('click', () => navigateTo('screen-home'));
 
-    // Wiring up Nav Icons (Feed <-> Profile <-> Search)
-    document.getElementById('nav-btn-profile-1').addEventListener('click', () => navigateTo('screen-profile'));
-    document.getElementById('nav-btn-search-1').addEventListener('click', () => { navigateTo('screen-search'); document.getElementById('searchInput').focus(); });
-    
-    document.getElementById('nav-btn-feed-2').addEventListener('click', () => { renderFeed(); navigateTo('screen-feed'); });
-    document.getElementById('nav-btn-search-2').addEventListener('click', () => { navigateTo('screen-search'); document.getElementById('searchInput').focus(); });
-    
-    document.getElementById('nav-btn-feed-3').addEventListener('click', () => { renderFeed(); navigateTo('screen-feed'); });
-    document.getElementById('nav-btn-profile-3').addEventListener('click', () => navigateTo('screen-profile'));
+    // Unified Bottom Navigation Wiring
+    document.querySelectorAll('.nav-btn-feed').forEach(btn => btn.addEventListener('click', () => { 
+        renderFeed(); navigateTo('screen-feed'); 
+    }));
+    document.querySelectorAll('.nav-btn-search').forEach(btn => btn.addEventListener('click', () => { 
+        navigateTo('screen-search'); document.getElementById('searchInput').focus(); 
+    }));
+    document.querySelectorAll('.nav-btn-saved').forEach(btn => btn.addEventListener('click', () => { 
+        renderSaved(); navigateTo('screen-saved'); 
+    }));
+    document.querySelectorAll('.nav-btn-profile').forEach(btn => btn.addEventListener('click', () => { 
+        navigateTo('screen-profile'); 
+    }));
 
-    // Initialize Feed on Load
+    // Boot App
     renderFeed();
   </script>
 </body>
